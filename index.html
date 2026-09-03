@@ -54,7 +54,15 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <div id="authGate" class="container" style="display:none;">
+    <div class="card" style="max-width:420px;margin:80px auto;text-align:center;">
+      <h2 style="margin-top:0">E‑commerce Margin Calculator</h2>
+      <p class="small muted">Sign in with your Conscious Chemist Google account to continue.</p>
+      <p id="authError" class="small" style="color:var(--red);display:none;"></p>
+      <a id="signInBtn" href="/api/auth/google/start" style="display:inline-block;margin-top:12px;background:var(--accent);color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Sign in with Google</a>
+    </div>
+  </div>
+  <div class="container" id="appRoot" style="display:none;">
     <header>
       <div class="logo">
         <svg class="logo-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -75,6 +83,7 @@
         <h1>E‑commerce Margin Calculator</h1>
         <div class="small muted">Calculate CM1, CM2, and Real Profit per order.</div>
       </div>
+      <div id="userBadge" class="small muted" style="margin-left:auto;text-align:right;"></div>
     </header>
 
     <div class="grid">
@@ -623,7 +632,35 @@ CM2: ${r.cm2>=0?'':'-'}₹${formatNumber(Math.abs(r.cm2))} (${r.cm2Pct}%)`).join
     function formatNumber(n){ return Math.abs(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-    load();
+    // ----- AUTH GATE -----
+    async function checkAuth(){
+      const params = new URLSearchParams(location.search);
+      const err = params.get('auth_error');
+      try{
+        const res = await fetch('/api/auth/me');
+        if(res.ok){
+          const {email} = await res.json();
+          document.getElementById('appRoot').style.display='';
+          document.getElementById('authGate').style.display='none';
+          const badge=document.getElementById('userBadge');
+          if(badge) badge.innerHTML = escapeHtml(email)+' &middot; <a href="/api/auth/logout" style="color:inherit">Sign out</a>';
+          if(err) history.replaceState({}, '', location.pathname);
+          return true;
+        }
+      }catch(e){}
+      document.getElementById('appRoot').style.display='none';
+      document.getElementById('authGate').style.display='';
+      if(err){
+        const box=document.getElementById('authError');
+        box.style.display='';
+        box.textContent = err==='domain_not_allowed'
+          ? 'Only @consciouschemist.com Google accounts are allowed.'
+          : 'Sign-in failed. Please try again.';
+      }
+      return false;
+    }
+
+    checkAuth().then(ok=>{ if(ok) load(); });
   })();
   </script>
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
