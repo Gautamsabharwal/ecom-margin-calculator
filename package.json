@@ -1,0 +1,7 @@
+{
+  "name": "ecom-margin-calculator",
+  "private": true,
+  "dependencies": {
+    "@netlify/blobs": "^11.0.3"
+  }
+}

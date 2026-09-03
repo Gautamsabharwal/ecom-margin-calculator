@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>E‑commerce Margin Calculator (Local)</title>
+  <title>E‑commerce Margin Calculator</title>
   <style>
     :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#7c3aed;--glass:rgba(255,255,255,0.03);--green:#22c55e;--red:#ef4444}
     *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial}
@@ -72,7 +72,7 @@
         </svg>
       </div>
       <div>
-        <h1>E‑commerce Margin Calculator — Local</h1>
+        <h1>E‑commerce Margin Calculator</h1>
         <div class="small muted">Calculate CM1, CM2, and Real Profit per order.</div>
       </div>
     </header>
@@ -81,20 +81,14 @@
       <!-- LEFT -->
       <div>
         <div class="card" id="setupCard">
-          <h3>1) SKUs (CSV or Manual)</h3>
-          <div class="small muted">CSV: sku,mrp,cogs</div>
+          <h3>1) SKU Sheet</h3>
+          <div class="small muted">Upload once (sku,mrp,cogs) — it's saved to your account and loads automatically next time.</div>
           <div style="display:flex;gap:8px;margin-top:8px">
             <input id="csvFile" type="file" accept=".csv">
-            <button id="importCsvBtn">Import</button>
+            <button id="importCsvBtn">Upload sheet</button>
             <button id="downloadFormatBtn">Download format</button>
           </div>
-
-          <div style="display:flex;gap:8px;margin-top:12px">
-            <input id="addSkuName" placeholder="SKU name" type="text">
-            <input id="addSkuMrp" placeholder="MRP" type="number">
-            <input id="addSkuCogs" placeholder="COGS" type="number">
-            <button id="addSkuBtn">Add SKU</button>
-          </div>
+          <div class="small muted" id="skuSyncStatus" style="margin-top:6px"></div>
 
           <div class="list" id="skuList"></div>
         </div>
@@ -212,7 +206,7 @@
   (function(){
     const LS_KEY = 'ecom_mc_v2';
     let state = {platforms: [], skus: []};
-    let editingPlatformIdx = -1, editingSkuIdx = -1;
+    let editingPlatformIdx = -1;
     let overrides = {};
 
     // ----- ELEMENTS -----
@@ -228,10 +222,7 @@
       importCsvBtn: document.getElementById('importCsvBtn'),
       downloadFormatBtn: document.getElementById('downloadFormatBtn'),
       skuList: document.getElementById('skuList'),
-      addSkuBtn: document.getElementById('addSkuBtn'),
-      addSkuName: document.getElementById('addSkuName'),
-      addSkuMrp: document.getElementById('addSkuMrp'),
-      addSkuCogs: document.getElementById('addSkuCogs'),
+      skuSyncStatus: document.getElementById('skuSyncStatus'),
       skuSelections: document.getElementById('skuSelections'),
 
       discount: document.getElementById('discount'),
@@ -254,8 +245,15 @@
     };
 
     // ----- INIT -----
-    function load(){
+    async function load(){
       try{ const raw = localStorage.getItem(LS_KEY); if(raw) state = JSON.parse(raw); }catch(e){}
+      try{
+        const res = await fetch('/api/skus');
+        if(res.ok){
+          const serverSkus = await res.json();
+          if(Array.isArray(serverSkus) && serverSkus.length>0) state.skus = serverSkus;
+        }
+      }catch(e){ console.warn('Could not load SKU sheet from server, using local copy', e); }
       if(state.platforms.length===0){
         state.platforms = [
           {name:'AMAZON',type:'amazon',fixedFees:[25,45,27]},
@@ -271,6 +269,22 @@
       renderAll();
     }
     function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+    async function persistSkus(){
+      if(els.skuSyncStatus) els.skuSyncStatus.textContent='Saving…';
+      try{
+        const res = await fetch('/api/skus', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(state.skus)
+        });
+        if(!res.ok) throw new Error('Save failed');
+        if(els.skuSyncStatus) els.skuSyncStatus.textContent='Saved ✓';
+      }catch(e){
+        console.error('Could not save SKU sheet to server', e);
+        if(els.skuSyncStatus) els.skuSyncStatus.textContent='Save failed — changes kept locally only';
+      }
+    }
 
     // ----- COMMISSION -----
     function computeCommission(sp,mrp,platform){
@@ -350,9 +364,15 @@
         tr.innerHTML=`<td>${escapeHtml(s.sku)}</td><td>₹ ${formatNumber(s.mrp)}</td><td>₹ ${formatNumber(s.cogs)}</td><td></td>`;
         const td=tr.querySelector('td:last-child');
         const edit=document.createElement('button'); edit.textContent='Edit'; edit.className='edit-btn';
-        edit.onclick=()=>{ els.addSkuName.value=s.sku; els.addSkuMrp.value=s.mrp; els.addSkuCogs.value=s.cogs; editingSkuIdx=idx; els.addSkuBtn.textContent='Update'; };
+        edit.onclick=async ()=>{
+          const newMrp=prompt('MRP for '+s.sku, s.mrp); if(newMrp===null) return;
+          const newCogs=prompt('COGS for '+s.sku, s.cogs); if(newCogs===null) return;
+          state.skus[idx].mrp=parseFloat(newMrp)||s.mrp;
+          state.skus[idx].cogs=parseFloat(newCogs)||0;
+          save(); renderAll(); await persistSkus();
+        };
         const del=document.createElement('button'); del.textContent='Delete'; del.className='del-btn';
-        del.onclick=()=>{ if(confirm('Delete?')){state.skus.splice(idx,1); save(); renderAll();}};
+        del.onclick=async ()=>{ if(confirm('Delete?')){state.skus.splice(idx,1); save(); renderAll(); await persistSkus();}};
         td.appendChild(edit); td.appendChild(del);
         tbody.appendChild(tr);
       });
@@ -373,35 +393,22 @@
       });
     }
 
-    els.addSkuBtn.addEventListener('click',()=>{
-      const sku=els.addSkuName.value.trim();
-      const mrp=parseFloat(els.addSkuMrp.value);
-      const cogs=parseFloat(els.addSkuCogs.value)||0;
-      if(!sku||isNaN(mrp)||mrp<0) return alert('Invalid');
-      if(editingSkuIdx!==-1){
-        state.skus[editingSkuIdx].sku=sku;
-        state.skus[editingSkuIdx].mrp=mrp;
-        state.skus[editingSkuIdx].cogs=cogs;
-        editingSkuIdx=-1; els.addSkuBtn.textContent='Add SKU';
-      }else{
-        state.skus.push({sku,mrp,cogs});
-      }
-      els.addSkuName.value=''; els.addSkuMrp.value=''; els.addSkuCogs.value='';
-      save(); renderAll();
-    });
-
     els.importCsvBtn.addEventListener('click',()=>{
       const f=els.csvFile.files[0]; if(!f) return alert('Choose file');
+      if(state.skus.length>0 && !confirm('This replaces your saved SKU sheet with this file. Continue?')) return;
       const reader=new FileReader();
-      reader.onload=e=>{
+      reader.onload=async e=>{
         const txt=e.target.result;
         const rows=txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>l.split(',').map(c=>c.trim().replace(/"/g,'')));
         if(rows.length>0 && isNaN(parseFloat(rows[0][1]))) rows.shift();
-        let added=0;
+        const parsed=[];
         rows.forEach(r=>{ if(r.length<2) return; const sku=r[0],mrp=parseFloat(r[1]),cogs=r[2]?parseFloat(r[2]):0;
-          if(sku && !isNaN(mrp)){ state.skus.push({sku,mrp,cogs}); added++; }
+          if(sku && !isNaN(mrp)) parsed.push({sku,mrp,cogs});
         });
-        save(); renderAll(); alert('Imported '+added);
+        state.skus=parsed;
+        save(); renderAll();
+        await persistSkus();
+        alert('Uploaded '+parsed.length+' SKUs — saved to your account.');
       };
       reader.readAsText(f);
     });
