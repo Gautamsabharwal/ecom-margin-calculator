@@ -46,8 +46,8 @@
 
     /* OVERRIDE PANEL - NEW STYLING */
     .override-panel{margin-top:12px;padding:10px;background:var(--glass);border-radius:8px;max-height:300px;overflow:auto;}
-    .override-header{display:grid;grid-template-columns:120px 120px 70px 70px 70px 70px 70px;gap:6px;font-weight:600;font-size:13px;margin-bottom:6px;}
-    .override-row{display:grid;grid-template-columns:120px 120px 70px 70px 70px 70px 70px;gap:6px;align-items:center;margin-bottom:4px;}
+    .override-header{display:grid;grid-template-columns:90px 90px 110px 65px 65px 65px 65px 65px;gap:6px;font-weight:600;font-size:13px;margin-bottom:6px;}
+    .override-row{display:grid;grid-template-columns:90px 90px 110px 65px 65px 65px 65px 65px;gap:6px;align-items:center;margin-bottom:4px;}
     .override-row input{width:100%;padding:6px;font-size:12px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:inherit;}
     .override-row input::placeholder{color:#888;}
     .reset-btn{background:#ef4444;margin-top:8px;padding:6px 10px;font-size:12px;}
@@ -91,7 +91,7 @@
       <div>
         <div class="card" id="setupCard">
           <h3>1) SKU Sheet</h3>
-          <div class="small muted">Upload once (sku,mrp,cogs) — it's saved to your account and loads automatically next time.</div>
+          <div class="small muted">Upload once (sku code, product name, mrp, cogs) — it's saved to your account and loads automatically next time.</div>
           <div style="display:flex;gap:8px;margin-top:8px">
             <input id="csvFile" type="file" accept=".csv">
             <button id="importCsvBtn">Upload sheet</button>
@@ -137,6 +137,7 @@
           <div class="checkbox-list" id="platformSelections"></div>
 
           <label style="margin-top:8px">SKUs</label>
+          <input id="skuSearch" type="text" placeholder="Search by SKU code or product name" style="margin-bottom:6px">
           <div class="checkbox-list" id="skuSelections"></div>
 
           <div style="display:flex;gap:8px;margin-top:8px">
@@ -173,7 +174,7 @@
           <div id="overridePanel" class="override-panel" style="display:none">
             <strong>Edit per-combination values</strong>
             <div class="override-header">
-              <div>Platform</div><div>SKU</div><div>COGS</div><div>Disc %</div><div>Opex</div><div>Delivery</div><div>Marketing</div>
+              <div>Platform</div><div>SKU Code</div><div>Product</div><div>COGS</div><div>Disc %</div><div>Opex</div><div>Delivery</div><div>Marketing</div>
             </div>
             <div id="overrideRows"></div>
             <button id="resetOverrides" class="reset-btn">Reset Overrides</button>
@@ -232,6 +233,7 @@
       downloadFormatBtn: document.getElementById('downloadFormatBtn'),
       skuList: document.getElementById('skuList'),
       skuSyncStatus: document.getElementById('skuSyncStatus'),
+      skuSearch: document.getElementById('skuSearch'),
       skuSelections: document.getElementById('skuSelections'),
 
       discount: document.getElementById('discount'),
@@ -269,12 +271,15 @@
           {name:'NYKAA',commission:40,base:'MRP'},
           {name:'SWIGGY',commission:25,base:'MRP'},
           {name:'BLINKIT',commission:33,base:'MRP'},
-          {name:'ZEPT O',commission:30,base:'MRP'},
+          {name:'ZEPTO',commission:30,base:'MRP'},
           {name:'MEESHO',commission:0,base:'MRP'},
           {name:'PURPPLE',commission:41,base:'MRP'}
         ];
       }
-      state.skus.forEach(s=> {if(s.cogs===undefined) s.cogs=0;});
+      let migrated=false;
+      state.platforms.forEach(p=>{ if(p.name==='ZEPT O'){ p.name='ZEPTO'; migrated=true; } });
+      state.skus.forEach(s=> {if(s.cogs===undefined) s.cogs=0; if(s.name===undefined) s.name='';});
+      if(migrated) save();
       renderAll();
     }
     function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
@@ -365,17 +370,19 @@
     function renderSkus(){
       els.skuList.innerHTML='';
       const table=document.createElement('table');
-      const thead=document.createElement('thead'); thead.innerHTML='<tr><th>SKU</th><th>MRP</th><th>COGS</th><th></th></tr>';
+      const thead=document.createElement('thead'); thead.innerHTML='<tr><th>SKU Code</th><th>Product Name</th><th>MRP</th><th>COGS</th><th></th></tr>';
       table.appendChild(thead);
       const tbody=document.createElement('tbody');
       state.skus.forEach((s,idx)=>{
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${escapeHtml(s.sku)}</td><td>₹ ${formatNumber(s.mrp)}</td><td>₹ ${formatNumber(s.cogs)}</td><td></td>`;
+        tr.innerHTML=`<td>${escapeHtml(s.sku)}</td><td>${escapeHtml(s.name||'—')}</td><td>₹ ${formatNumber(s.mrp)}</td><td>₹ ${formatNumber(s.cogs)}</td><td></td>`;
         const td=tr.querySelector('td:last-child');
         const edit=document.createElement('button'); edit.textContent='Edit'; edit.className='edit-btn';
         edit.onclick=async ()=>{
+          const newName=prompt('Product name for '+s.sku, s.name||''); if(newName===null) return;
           const newMrp=prompt('MRP for '+s.sku, s.mrp); if(newMrp===null) return;
           const newCogs=prompt('COGS for '+s.sku, s.cogs); if(newCogs===null) return;
+          state.skus[idx].name=newName;
           state.skus[idx].mrp=parseFloat(newMrp)||s.mrp;
           state.skus[idx].cogs=parseFloat(newCogs)||0;
           save(); renderAll(); await persistSkus();
@@ -391,16 +398,23 @@
     }
 
     function renderSkuCheckboxes(){
+      const filter = (els.skuSearch && els.skuSearch.value || '').trim().toLowerCase();
+      const checkedSet = new Set(Array.from(els.skuSelections.querySelectorAll('input:checked')).map(cb=>cb.value));
       els.skuSelections.innerHTML='';
-      state.skus.forEach(s=>{
-        const item=document.createElement('div');
-        item.className='checkbox-item';
-        const id=`sku_${s.sku}`;
-        item.innerHTML=`<input type="checkbox" value="${escapeHtml(s.sku)}" id="${id}">
-                        <label for="${id}" style="margin:0;cursor:pointer;flex:1">${escapeHtml(s.sku)} (₹${s.mrp}, COGS ₹${s.cogs})</label>`;
-        els.skuSelections.appendChild(item);
-      });
+      state.skus
+        .filter(s => !filter || s.sku.toLowerCase().includes(filter) || (s.name||'').toLowerCase().includes(filter))
+        .forEach(s=>{
+          const item=document.createElement('div');
+          item.className='checkbox-item';
+          const id=`sku_${s.sku}`;
+          const label = s.name ? `${escapeHtml(s.name)} <span class="muted">(${escapeHtml(s.sku)})</span>` : escapeHtml(s.sku);
+          item.innerHTML=`<input type="checkbox" value="${escapeHtml(s.sku)}" id="${id}" ${checkedSet.has(s.sku)?'checked':''}>
+                          <label for="${id}" style="margin:0;cursor:pointer;flex:1">${label} <span class="muted">— ₹${s.mrp}, COGS ₹${s.cogs}</span></label>`;
+          els.skuSelections.appendChild(item);
+        });
     }
+
+    if(els.skuSearch) els.skuSearch.addEventListener('input', renderSkuCheckboxes);
 
     els.importCsvBtn.addEventListener('click',()=>{
       const f=els.csvFile.files[0]; if(!f) return alert('Choose file');
@@ -409,10 +423,10 @@
       reader.onload=async e=>{
         const txt=e.target.result;
         const rows=txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>l.split(',').map(c=>c.trim().replace(/"/g,'')));
-        if(rows.length>0 && isNaN(parseFloat(rows[0][1]))) rows.shift();
+        if(rows.length>0 && isNaN(parseFloat(rows[0][2]))) rows.shift();
         const parsed=[];
-        rows.forEach(r=>{ if(r.length<2) return; const sku=r[0],mrp=parseFloat(r[1]),cogs=r[2]?parseFloat(r[2]):0;
-          if(sku && !isNaN(mrp)) parsed.push({sku,mrp,cogs});
+        rows.forEach(r=>{ if(r.length<3) return; const sku=r[0],name=r[1]||'',mrp=parseFloat(r[2]),cogs=r[3]?parseFloat(r[3]):0;
+          if(sku && !isNaN(mrp)) parsed.push({sku,name,mrp,cogs});
         });
         state.skus=parsed;
         save(); renderAll();
@@ -423,7 +437,7 @@
     });
 
     els.downloadFormatBtn.addEventListener('click',()=>{
-      const csv="SKU Name,MRP,COGS\nCCBBSM01,249,25\n";
+      const csv="SKU Code,Product Name,MRP,COGS\nCCBBSM01,Sample Product,249,25\n";
       const blob=new Blob([csv],{type:'text/csv'});
       const url=URL.createObjectURL(blob);
       const a=document.createElement('a'); a.href=url; a.download='sample_skus.csv'; a.click(); URL.revokeObjectURL(url);
@@ -451,6 +465,7 @@
         row.innerHTML = `
           <div>${escapeHtml(r.platform)}</div>
           <div>${escapeHtml(r.sku)}</div>
+          <div>${escapeHtml(r.skuName||'—')}</div>
           <input type="number" placeholder="COGS" data-key="${key}" data-field="cogs" value="${ov.cogs ?? ''}">
           <input type="number" placeholder="%" data-key="${key}" data-field="discount" value="${ov.discount ?? ''}">
           <input type="number" placeholder="Opex" data-key="${key}" data-field="opex" value="${ov.opex ?? ''}">
@@ -522,7 +537,7 @@
           const cm2 = round2(cm1 - marketing);
           const cm2Pct = netRevenue!==0 ? round2((cm2/netRevenue)*100) : 0;
 
-          results.push({platform:pname, sku:sname, sp, settlement, netRevenue, commTotal:comm.total, cogs, opex, delivery, marketing, cm1, cm1Pct, cm2, cm2Pct, commBreakdown:comm.breakdown});
+          results.push({platform:pname, sku:sname, skuName: sku.name||'', sp, settlement, netRevenue, commTotal:comm.total, cogs, opex, delivery, marketing, cm1, cm1Pct, cm2, cm2Pct, commBreakdown:comm.breakdown});
         });
       });
       return results;
@@ -553,6 +568,8 @@
           </div>`;
         }
         els.resultBox.innerHTML=`
+          <div class="calc-row"><div class="muted">Platform:</div><div style="margin-left:auto">${escapeHtml(r.platform)}</div></div>
+          <div class="calc-row"><div class="muted">Product:</div><div style="margin-left:auto">${escapeHtml(r.skuName||r.sku)}${r.skuName?' <span class="muted">('+escapeHtml(r.sku)+')</span>':''}</div></div>
           <div class="calc-row"><div class="muted">SP:</div><div style="margin-left:auto">₹ ${formatNumber(r.sp)}</div></div>
           <div class="calc-row"><div class="muted">Settlement:</div><div style="margin-left:auto">₹ ${formatNumber(r.settlement)}</div></div>
           <div class="calc-row"><div class="muted">Net (After 18% GST):</div><div style="margin-left:auto">₹ ${formatNumber(r.netRevenue)}</div></div>
@@ -565,10 +582,10 @@
       }
       else{
         const table=document.createElement('table');
-        table.innerHTML='<thead><tr><th>Plat</th><th>SKU</th><th>SP</th><th>Settlement</th><th>Net</th><th>Comm</th><th>CM1</th><th>CM1%</th><th>CM2</th><th>CM2%</th></tr></thead><tbody>';
+        table.innerHTML='<thead><tr><th>Plat</th><th>SKU Code</th><th>Product</th><th>SP</th><th>Settlement</th><th>Net</th><th>Comm</th><th>CM1</th><th>CM1%</th><th>CM2</th><th>CM2%</th></tr></thead><tbody>';
         results.forEach(r=>{
           table.innerHTML+=`<tr>
-            <td>${escapeHtml(r.platform)}</td><td>${escapeHtml(r.sku)}</td>
+            <td>${escapeHtml(r.platform)}</td><td>${escapeHtml(r.sku)}</td><td>${escapeHtml(r.skuName||'—')}</td>
             <td>₹ ${formatNumber(r.sp)}</td><td>₹ ${formatNumber(r.settlement)}</td>
             <td>₹ ${formatNumber(r.netRevenue)}</td><td>₹ ${formatNumber(r.commTotal)}</td>
             <td>${(r.cm1>=0?'':'−')}₹ ${formatNumber(Math.abs(r.cm1))}</td><td>${r.cm1Pct}%</td>
@@ -587,7 +604,7 @@
 
     els.exampleBtn.addEventListener('click',()=>{
       const sidx=state.skus.findIndex(s=>s.sku==='CCBBSM01');
-      if(sidx===-1) state.skus.push({sku:'CCBBSM01',mrp:249,cogs:25});
+      if(sidx===-1) state.skus.push({sku:'CCBBSM01',name:'Sample Product',mrp:249,cogs:25});
       save(); renderAll();
       const amazonCb=els.platformSelections.querySelector('input[value="AMAZON"]');
       if(amazonCb) amazonCb.checked=true;
@@ -601,7 +618,7 @@
       const results=computeResults();
       if(!results.length) return;
       const txt=results.map(r=>`Platform: ${r.platform}
-SKU: ${r.sku}
+SKU: ${r.sku}${r.skuName?' — '+r.skuName:''}
 SP: ₹${formatNumber(r.sp)}
 Settlement: ₹${formatNumber(r.settlement)}
 Net (After 18% GST): ₹${formatNumber(r.netRevenue)}
@@ -614,8 +631,8 @@ CM2: ${r.cm2>=0?'':'-'}₹${formatNumber(Math.abs(r.cm2))} (${r.cm2Pct}%)`).join
     els.exportCsvBtn.addEventListener('click',()=>{
       const results=computeResults();
       if(!results.length) return;
-      const header=`Platform,SKU,SP,Settlement,Net,Commission,COGS,Opex,Delivery,Marketing,CM1,CM1%,CM2,CM2%\n`;
-      const rows=results.map(r=>`"${r.platform}","${r.sku}",${r.sp},${r.settlement},${r.netRevenue},${r.commTotal},${r.cogs},${r.opex},${r.delivery},${r.marketing},${r.cm1},${r.cm1Pct},${r.cm2},${r.cm2Pct}`).join('\n');
+      const header=`Platform,SKU,Product,SP,Settlement,Net,Commission,COGS,Opex,Delivery,Marketing,CM1,CM1%,CM2,CM2%\n`;
+      const rows=results.map(r=>`"${r.platform}","${r.sku}","${(r.skuName||'').replace(/"/g,'""')}",${r.sp},${r.settlement},${r.netRevenue},${r.commTotal},${r.cogs},${r.opex},${r.delivery},${r.marketing},${r.cm1},${r.cm1Pct},${r.cm2},${r.cm2Pct}`).join('\n');
       const blob=new Blob([header+rows],{type:'text/csv'});
       const url=URL.createObjectURL(blob);
       const a=document.createElement('a'); a.href=url; a.download='results.csv'; a.click(); URL.revokeObjectURL(url);
