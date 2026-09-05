@@ -888,8 +888,11 @@
       });
     }
 
+    let lastOverrideSignature = null;
+
     // ----- OVERRIDES (now keyed by platform only) -----
     function renderOverrides(results){
+      lastOverrideSignature = results.map(r=>r.platform).join('|');
       els.overrideRows.innerHTML='';
       results.forEach(r=>{
         const key = r.platform;
@@ -915,7 +918,7 @@
           if (!overrides[key]) overrides[key] = {};
           if (val === undefined) delete overrides[key][field];
           else overrides[key][field] = val;
-          calculate();
+          calculate(); // only the result cards re-render; this row's own inputs are left alone
         });
       });
     }
@@ -924,6 +927,7 @@
       if (confirm('Reset all per-platform overrides?')) {
         overrides = {};
         ensureOpexDefaultsForSelected();
+        lastOverrideSignature = null; // force the override rows to redraw with fresh defaults
         calculate();
       }
     });
@@ -1012,19 +1016,29 @@
     }
 
     function calculate(){
-      els.resultsContainer.innerHTML='';
-      els.overridePanel.style.display='none';
       const results=computeResults();
-      if(!results.length){ els.resultsContainer.innerHTML='<div class="muted">Select a product in Step 1 to see margins.</div>'; return; }
+      if(!results.length){
+        els.resultsContainer.innerHTML='<div class="muted">Select a product in Step 1 to see margins.</div>';
+        els.overridePanel.style.display='none';
+        lastOverrideSignature=null;
+        return;
+      }
 
       els.resultsContainer.classList.toggle('multi', results.length>1);
       els.resultsContainer.innerHTML = results.map(platformResultCardHtml).join('');
 
       els.overridePanel.style.display='block';
-      renderOverrides(results);
+      const sig = results.map(r=>r.platform).join('|');
+      if(sig !== lastOverrideSignature){
+        renderOverrides(results); // platform set changed — safe to rebuild the row inputs
+      }
     }
 
     els.calcBtn.addEventListener('click',calculate);
+    // Live recalculation — no need to hit Calculate after changing a field.
+    [els.discount, els.cogs, els.delivery, els.marketing].forEach(inp=>{
+      inp.addEventListener('input', calculate);
+    });
 
     els.exampleBtn.addEventListener('click',()=>{
       const sidx=state.skus.findIndex(s=>s.sku==='CCBBSM01');
