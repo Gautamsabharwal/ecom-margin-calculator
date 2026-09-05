@@ -60,8 +60,8 @@
 
     /* OVERRIDE PANEL */
     .override-panel{margin-top:12px;padding:10px;background:var(--glass);border-radius:8px;max-height:300px;overflow:auto;}
-    .override-header{display:grid;grid-template-columns:110px 80px 65px 65px 65px 65px;gap:6px;font-weight:600;font-size:13px;margin-bottom:6px;}
-    .override-row{display:grid;grid-template-columns:110px 80px 65px 65px 65px 65px;gap:6px;align-items:center;margin-bottom:4px;}
+    .override-header{display:grid;grid-template-columns:130px 65px 65px 65px 65px;gap:6px;font-weight:600;font-size:13px;margin-bottom:6px;}
+    .override-row{display:grid;grid-template-columns:130px 65px 65px 65px 65px;gap:6px;align-items:center;margin-bottom:4px;}
     .override-row input{width:100%;padding:6px;font-size:12px;border-radius:6px;border:1px solid var(--border);background:var(--input-bg);color:inherit;}
     .override-row input::placeholder{color:var(--muted);}
     .reset-btn{background:var(--red);margin-top:8px;padding:6px 10px;font-size:12px;}
@@ -261,7 +261,7 @@
         <div id="overridePanel" class="override-panel" style="display:none">
           <strong>Edit per-platform values</strong>
           <div class="override-header">
-            <div>Platform</div><div>COGS</div><div>Disc %</div><div>Opex</div><div>Delivery</div><div>Marketing</div>
+            <div>Platform</div><div>Disc %</div><div>Opex</div><div>Delivery</div><div>Marketing</div>
           </div>
           <div id="overrideRows"></div>
           <button id="resetOverrides" class="reset-btn">Reset Overrides</button>
@@ -901,7 +901,6 @@
         row.className = 'override-row';
         row.innerHTML = `
           <div>${escapeHtml(r.platform)}</div>
-          <input type="number" placeholder="COGS" data-key="${key}" data-field="cogs" value="${ov.cogs ?? ''}">
           <input type="number" placeholder="%" data-key="${key}" data-field="discount" value="${ov.discount ?? ''}">
           <input type="number" placeholder="Opex" data-key="${key}" data-field="opex" value="${ov.opex ?? ''}">
           <input type="number" placeholder="Del" data-key="${key}" data-field="delivery" value="${ov.delivery ?? ''}">
@@ -960,7 +959,7 @@
 
         const netRevenue = round2(sp / 1.18);
 
-        const cogs = ov.cogs !== undefined ? ov.cogs : globalCogs;
+        const cogs = globalCogs; // flat across all platforms — no per-platform override
         const opex = ov.opex !== undefined ? ov.opex : globalOpex;
         const delivery = ov.delivery !== undefined ? ov.delivery : globalDeliv;
         const marketing = ov.marketing !== undefined ? ov.marketing : globalMark;
