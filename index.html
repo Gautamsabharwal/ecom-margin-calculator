@@ -488,18 +488,44 @@
       }
       let migrated=false;
       state.platforms.forEach(p=>{ if(p.name==='ZEPT O'){ p.name='ZEPTO'; migrated=true; } });
-      // Upgrade any existing NYKAA entry to the correct commission-on-pre-GST-MRP formula
-      state.platforms.forEach(p=>{
-        if(p.name==='NYKAA' && p.type!=='nykaa'){
-          p.type='nykaa';
-          p.commissionPct = (p.commission!==undefined) ? p.commission : 40;
-          delete p.commission; delete p.base;
-          migrated=true;
-        }
+
+      // Canonical platform set — ensures every default platform exists (case-insensitively),
+      // normalizes casing on any user-added duplicate, and upgrades Nykaa to its real formula.
+      const CANONICAL = [
+        {name:'AMAZON', make:()=>({name:'AMAZON',type:'amazon',fixedFees:[25,45,27]})},
+        {name:'NYKAA', make:()=>({name:'NYKAA',type:'nykaa',commissionPct:40})},
+        {name:'SWIGGY', make:()=>({name:'SWIGGY',commission:25,base:'MRP'})},
+        {name:'BLINKIT', make:()=>({name:'BLINKIT',commission:33,base:'MRP'})},
+        {name:'ZEPTO', make:()=>({name:'ZEPTO',commission:30,base:'MRP'})},
+        {name:'MEESHO', make:()=>({name:'MEESHO',commission:0,base:'MRP'})},
+        {name:'PURPPLE', make:()=>({name:'PURPPLE',commission:41,base:'MRP'})},
+        {name:'FLIPKART', make:()=>({name:'FLIPKART',commission:30,base:'SP'})},
+        {name:'MYNTRA', make:()=>({name:'MYNTRA',commission:30,base:'SP'})}
+      ];
+      CANONICAL.forEach(cp=>{
+        const idx = state.platforms.findIndex(p=>p.name && p.name.toUpperCase()===cp.name);
+        if(idx===-1){ state.platforms.push(cp.make()); migrated=true; }
+        else if(state.platforms[idx].name!==cp.name){ state.platforms[idx].name=cp.name; migrated=true; }
       });
-      // Add new platforms (Change 4) without disturbing existing ones/users
-      if(!state.platforms.some(p=>p.name==='FLIPKART')){ state.platforms.push({name:'FLIPKART',commission:30,base:'SP'}); migrated=true; }
-      if(!state.platforms.some(p=>p.name==='MYNTRA')){ state.platforms.push({name:'MYNTRA',commission:30,base:'SP'}); migrated=true; }
+      // Upgrade any existing NYKAA entry to the correct commission-on-pre-GST-MRP formula,
+      // preserving a manually-customized commission % if the user had changed it.
+      const nyIdx = state.platforms.findIndex(p=>p.name==='NYKAA');
+      if(nyIdx!==-1 && state.platforms[nyIdx].type!=='nykaa'){
+        const old = state.platforms[nyIdx];
+        state.platforms[nyIdx] = {name:'NYKAA', type:'nykaa', commissionPct: old.commission!==undefined?old.commission:40};
+        migrated=true;
+      }
+      // De-duplicate any leftover case-insensitive duplicates (e.g. a custom "Flipkart" alongside "FLIPKART")
+      const seenNames = new Set();
+      const beforeLen = state.platforms.length;
+      state.platforms = state.platforms.filter(p=>{
+        const key = (p.name||'').toUpperCase();
+        if(seenNames.has(key)) return false;
+        seenNames.add(key);
+        return true;
+      });
+      if(state.platforms.length!==beforeLen) migrated=true;
+
       state.skus.forEach(s=> {if(s.cogs===undefined) s.cogs=0; if(s.name===undefined) s.name='';});
       if(migrated) save();
       renderAll();
