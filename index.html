@@ -5,22 +5,35 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>E‑commerce Margin Calculator</title>
   <style>
-    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#7c3aed;--glass:rgba(255,255,255,0.03);--green:#22c55e;--red:#ef4444}
+    :root{
+      --bg:linear-gradient(180deg,#ffffff 0%,#eef1f7 100%);
+      --card:#ffffff;--text:#12141a;--muted:#667085;--accent:#7c3aed;
+      --border:rgba(17,20,24,0.12);--glass:rgba(17,20,24,0.045);--input-bg:rgba(17,20,24,0.035);
+      --shadow:rgba(17,20,24,0.10);--green:#16a34a;--red:#dc2626;--chip-selected:rgba(124,58,237,0.14);
+    }
+    [data-theme="dark"]{
+      --bg:linear-gradient(180deg,#0d0d0d 0%,#111111 100%);
+      --card:#171717;--text:#f2f4f7;--muted:#9aa4b2;--accent:#8b5cf6;
+      --border:rgba(255,255,255,0.10);--glass:rgba(255,255,255,0.05);--input-bg:rgba(255,255,255,0.06);
+      --shadow:rgba(0,0,0,0.6);--green:#22c55e;--red:#ef4444;--chip-selected:rgba(139,92,246,0.22);
+    }
     *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial}
-    body{margin:0;background:linear-gradient(180deg,#071129 0%,#071a2a 100%);color:#e6eef6;min-height:100vh;padding:18px}
+    body{margin:0;background:var(--bg);color:var(--text);min-height:100vh;padding:18px;transition:background .2s,color .2s}
     .container{max-width:980px;margin:0 auto}
-    header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:18px;position:relative}
     h1{font-size:20px;margin:0}
     .grid{display:grid;grid-template-columns:1fr 420px;gap:16px}
-    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 18px var(--shadow);border:1px solid var(--border)}
     label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px}
-    input[type=text],input[type=number],select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.04);background:var(--glass);color:inherit}
+    input[type=text],input[type=number],select{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:inherit}
     button{background:var(--accent);border:none;color:white;padding:9px 12px;border-radius:8px;cursor:pointer}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    button.secondary{background:transparent;color:var(--text);border:1px solid var(--border)}
     .row{display:flex;gap:8px}
     .small{font-size:13px;color:var(--muted)}
-    .list{max-height:220px;overflow:auto;margin-top:8px;border-radius:8px;padding:8px;background:rgba(255,255,255,.02)}
+    .list{max-height:220px;overflow:auto;margin-top:8px;border-radius:8px;padding:8px;background:var(--glass)}
     table{width:100%;border-collapse:collapse;min-width:700px}
-    th,td{padding:8px;text-align:left;border-bottom:1px dashed rgba(255,255,255,.02);font-size:13px;white-space:nowrap}
+    th,td{padding:8px;text-align:left;border-bottom:1px dashed var(--border);font-size:13px;white-space:nowrap}
     .muted{color:var(--muted)}
     .calc-row{display:flex;gap:8px;align-items:center}
     .result{background:linear-gradient(90deg,rgba(124,58,237,.12),rgba(124,58,237,.04));padding:10px;border-radius:8px;margin-top:10px;overflow-x:auto}
@@ -32,11 +45,11 @@
     .cm2-box{background:linear-gradient(90deg,rgba(59,130,246,.12),rgba(59,130,246,.04));border:1px solid #3b82f6;}
     .cm1-box .big,.cm2-box .big{font-size:20px}
     .cm-pct{font-size:14px;color:var(--accent);margin-top:4px}
-    .note{font-size:13px;color:#cde}
+    .note{font-size:13px;color:var(--muted)}
     footer{margin-top:16px;color:var(--muted);font-size:13px}
     @media(max-width:900px){.grid{grid-template-columns:1fr;}.card{padding:12px}}
-    .edit-btn,.del-btn{background:transparent;border:1px solid rgba(255,255,255,.04);color:inherit;padding:6px;border-radius:6px;margin-left:4px;}
-    .checkbox-list{max-height:150px;overflow:auto;padding:4px;border:1px solid rgba(255,255,255,.04);border-radius:6px;background:var(--glass);margin-bottom:8px}
+    .edit-btn,.del-btn{background:transparent;border:1px solid var(--border);color:inherit;padding:6px;border-radius:6px;margin-left:4px;}
+    .checkbox-list{max-height:150px;overflow:auto;padding:4px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);margin-bottom:8px}
     .checkbox-item{display:flex;align-items:center;gap:8px;padding:4px 0}
     .add-section{margin-top:12px;padding:8px;background:var(--glass);border-radius:8px}
     .add-section button{padding:6px 10px;font-size:12px}
@@ -45,13 +58,55 @@
     .logo::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.1);border-radius:10px;}
     .logo-icon{width:24px;height:24px;color:white;z-index:1;}
 
-    /* OVERRIDE PANEL - NEW STYLING */
+    /* OVERRIDE PANEL */
     .override-panel{margin-top:12px;padding:10px;background:var(--glass);border-radius:8px;max-height:300px;overflow:auto;}
-    .override-header{display:grid;grid-template-columns:90px 90px 110px 65px 65px 65px 65px 65px;gap:6px;font-weight:600;font-size:13px;margin-bottom:6px;}
-    .override-row{display:grid;grid-template-columns:90px 90px 110px 65px 65px 65px 65px 65px;gap:6px;align-items:center;margin-bottom:4px;}
-    .override-row input{width:100%;padding:6px;font-size:12px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:inherit;}
-    .override-row input::placeholder{color:#888;}
-    .reset-btn{background:#ef4444;margin-top:8px;padding:6px 10px;font-size:12px;}
+    .override-header{display:grid;grid-template-columns:110px 80px 65px 65px 65px 65px;gap:6px;font-weight:600;font-size:13px;margin-bottom:6px;}
+    .override-row{display:grid;grid-template-columns:110px 80px 65px 65px 65px 65px;gap:6px;align-items:center;margin-bottom:4px;}
+    .override-row input{width:100%;padding:6px;font-size:12px;border-radius:6px;border:1px solid var(--border);background:var(--input-bg);color:inherit;}
+    .override-row input::placeholder{color:var(--muted);}
+    .reset-btn{background:var(--red);margin-top:8px;padding:6px 10px;font-size:12px;}
+
+    /* HEADER WIDGETS: theme toggle + sku sheet */
+    .header-actions{margin-left:auto;display:flex;align-items:center;gap:8px;position:relative}
+    .icon-btn{background:var(--glass);color:var(--text);border:1px solid var(--border);width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;padding:0}
+    .sku-widget-btn{background:var(--glass);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+    .sku-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block}
+    .sku-dot.empty{background:var(--muted)}
+    .sku-popover{position:absolute;top:44px;right:0;width:320px;max-width:88vw;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 30px var(--shadow);padding:12px;z-index:20;display:none}
+    .sku-popover.open{display:block}
+
+    /* STEP TABS */
+    .step-tabs{display:flex;gap:8px;margin-bottom:14px}
+    .step-tab{flex:1;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--glass);text-align:center;font-size:13px;color:var(--muted)}
+    .step-tab.active{border-color:var(--accent);color:var(--text);background:var(--chip-selected);font-weight:600}
+
+    /* MODE TABS (Single / Combo) */
+    .mode-tabs{display:flex;gap:10px;margin-bottom:14px}
+    .mode-tab{flex:1;padding:14px;border-radius:12px;border:1px solid var(--border);cursor:pointer;background:var(--glass);text-align:center}
+    .mode-tab.active{border-color:var(--accent);background:var(--chip-selected)}
+    .mode-tab h4{margin:0 0 4px 0}
+
+    .search-results{max-height:200px;overflow:auto;margin-top:6px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg)}
+    .search-result-item{padding:8px 10px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)}
+    .search-result-item:last-child{border-bottom:none}
+    .search-result-item:hover{background:var(--chip-selected)}
+
+    .selected-product-box{margin-top:10px;padding:10px;border-radius:8px;background:var(--glass);border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px}
+
+    .combo-slot{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+    .combo-slot select{flex:1}
+
+    .platform-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:20px;border:1px solid var(--border);background:var(--glass);margin:4px 4px 4px 0;cursor:pointer;font-size:13px}
+    .platform-chip.checked{background:var(--chip-selected);border-color:var(--accent)}
+    .platform-chip input{width:auto}
+
+    .results-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:10px}
+    @media(min-width:700px){.results-grid.multi{grid-template-columns:1fr 1fr}}
+    .platform-result-card{border:1px solid var(--border);border-radius:10px;padding:10px;background:var(--glass)}
+    .platform-result-card h4{margin:0 0 6px 0;font-size:14px}
+
+    .collapsible-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+    .collapsible-body{margin-top:10px}
   </style>
 </head>
 <body>
@@ -84,21 +139,26 @@
         <h1>E‑commerce Margin Calculator</h1>
         <div class="small muted">Calculate CM1, CM2, and Real Profit per order.</div>
       </div>
-      <div id="userBadge" class="small muted" style="margin-left:auto;text-align:right;"></div>
-    </header>
 
-    <div class="grid">
-      <!-- LEFT -->
-      <div>
-        <div class="card" id="setupCard">
-          <h3>1) SKU Sheet</h3>
+      <div class="header-actions">
+        <div id="userBadge" class="small muted" style="text-align:right;"></div>
+
+        <button id="skuWidgetBtn" class="sku-widget-btn" type="button" title="Manage SKU Sheet">
+          <span id="skuDot" class="sku-dot empty"></span>
+          <span id="skuWidgetLabel">Upload SKU Sheet</span>
+        </button>
+
+        <button id="themeToggleBtn" class="icon-btn" type="button" title="Toggle theme">🌙</button>
+
+        <div id="skuPopover" class="sku-popover">
+          <h4 style="margin:0 0 8px 0;font-size:14px">SKU Sheet</h4>
           <div class="small muted">Upload once (sku code, product name, mrp, cogs) — it's saved to your account and loads automatically next time.</div>
           <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
             <input id="csvFile" type="file" accept=".csv" style="flex:1;min-width:0">
-            <div style="display:flex;gap:6px;margin-left:auto">
-              <button id="importCsvBtn" class="compact-btn">Upload</button>
-              <button id="downloadFormatBtn" class="compact-btn">Format</button>
-            </div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <button id="importCsvBtn" class="compact-btn">Upload</button>
+            <button id="downloadFormatBtn" class="compact-btn secondary">Format</button>
           </div>
           <div class="small muted" id="skuSyncStatus" style="margin-top:6px"></div>
 
@@ -121,110 +181,145 @@
             <div class="small muted" id="skuCount" style="margin-top:6px"></div>
           </div>
         </div>
+      </div>
+    </header>
 
-        <div class="card" style="margin-top:12px">
-          <h3>2) Platforms</h3>
-          <div class="list" id="platformList"></div>
-          <div class="add-section">
-            <h4 style="margin:0 0 8px 0;font-size:14px">Add Custom Platform</h4>
-            <div style="display:flex;gap:8px;margin-bottom:8px">
-              <input id="platformName" placeholder="Platform name" type="text" style="flex:1">
-              <input id="platformCommission" placeholder="Commission %" type="number" style="width:80px">
-              <select id="platformBase" style="width:70px">
-                <option value="SP">on SP</option>
-                <option value="MRP">on MRP</option>
-              </select>
-              <button id="addPlatformBtn">Add</button>
-            </div>
-          </div>
+    <!-- STEP TABS -->
+    <div class="step-tabs">
+      <div class="step-tab" id="stepTab1">1 · Select Product</div>
+      <div class="step-tab" id="stepTab2">2 · Platforms &amp; Margins</div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="card" id="step1Panel">
+      <h3 style="margin-top:0">Select a product</h3>
+      <div class="mode-tabs">
+        <div class="mode-tab" id="modeSingleTab">
+          <h4>Single SKU</h4>
+          <div class="small muted">Calculate margins for one product</div>
         </div>
+        <div class="mode-tab" id="modeComboTab">
+          <h4>Combo</h4>
+          <div class="small muted">Bundle 2–3 products together</div>
+        </div>
+      </div>
 
-        <div class="card" style="margin-top:12px">
-          <h3>Saved Data</h3>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button id="exportBtn">Export (JSON)</button>
-            <button id="clearBtn">Clear All</button>
+      <div id="singleModePanel">
+        <input id="singleSkuSearch" type="text" placeholder="Search by SKU code or product name">
+        <div id="singleSkuResults" class="search-results" style="display:none"></div>
+        <div id="singleSelectedBox" class="selected-product-box" style="display:none">
+          <div id="singleSelectedText"></div>
+          <button class="secondary compact-btn" id="singleChangeBtn">Change</button>
+        </div>
+      </div>
+
+      <div id="comboModePanel" style="display:none">
+        <div id="comboSlots"></div>
+        <button class="secondary compact-btn" id="addComboProductBtn" type="button">+ Add Product</button>
+        <div id="comboSummaryBox" class="selected-product-box" style="display:none;margin-top:12px;flex-direction:column;align-items:stretch;gap:8px">
+          <div id="comboSummaryText"></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <label style="margin:0;flex:0 0 auto">Combo MRP</label>
+            <input id="comboMrpInput" type="number" placeholder="Sum of product MRPs">
           </div>
         </div>
       </div>
 
-      <!-- RIGHT -->
-      <div>
-        <div class="card" id="calcCard">
-          <h3>3) Calculate</h3>
+      <div style="margin-top:14px;text-align:right">
+        <button id="nextToStep2Btn" disabled>Next → Select Platforms</button>
+      </div>
+    </div>
 
-          <label>Platforms</label>
-          <div class="checkbox-list" id="platformSelections"></div>
+    <!-- STEP 2 -->
+    <div id="step2Panel" style="display:none">
+      <div class="card" id="calcCard">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <button class="secondary compact-btn" id="backToStep1Btn">← Back</button>
+          <div id="step2ProductSummary" class="small muted"></div>
+        </div>
 
-          <label style="margin-top:8px">SKUs</label>
-          <input id="skuSearch" type="text" placeholder="Search by SKU code or product name" style="margin-bottom:6px">
-          <div class="checkbox-list" id="skuSelections"></div>
+        <label style="margin-top:8px">Platforms</label>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <input type="checkbox" id="selectAllPlatforms" style="width:auto">
+          <label for="selectAllPlatforms" style="margin:0;cursor:pointer">Select all (none selected = all shown)</label>
+        </div>
+        <div id="platformChips" style="margin-bottom:10px"></div>
 
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <div style="flex:1"><label>Discount %</label><input id="discount" type="number" value="0"></div>
-            <div style="flex:1"><label>Opex</label><input id="opex" type="number" value="0"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <div style="flex:1"><label>Discount %</label><input id="discount" type="number" value="30"></div>
+          <div style="flex:1"><label>COGS (override)</label><input id="cogs" type="number" value="0"></div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <div style="flex:1"><label>Delivery</label><input id="delivery" type="number" value="0"></div>
+          <div style="flex:1"><label>Marketing</label><input id="marketing" type="number" value="0"></div>
+        </div>
+
+        <div id="resultsContainer" class="results-grid"></div>
+
+        <!-- Override panel -->
+        <div id="overridePanel" class="override-panel" style="display:none">
+          <strong>Edit per-platform values</strong>
+          <div class="override-header">
+            <div>Platform</div><div>COGS</div><div>Disc %</div><div>Opex</div><div>Delivery</div><div>Marketing</div>
           </div>
+          <div id="overrideRows"></div>
+          <button id="resetOverrides" class="reset-btn">Reset Overrides</button>
+        </div>
 
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <div style="flex:1"><label>Delivery</label><input id="delivery" type="number" value="0"></div>
-            <div style="flex:1"><label>Marketing</label><input id="marketing" type="number" value="0"></div>
-          </div>
+        <div class="note" style="margin-top:12px">
+          <strong>Your Logic:</strong><br>
+          Net Revenue = SP ÷ 1.18 (18% GST included in SP)<br>
+          Settlement = SP − Commission<br>
+          CM1 = Net − COGS − Opex − Commission<br>
+          CM2 = CM1 − Marketing
+        </div>
 
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <div style="flex:1"><label>COGS (override)</label><input id="cogs" type="number" value="0"></div>
-            <div style="flex:1"></div>
-          </div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button id="calcBtn">Calculate</button>
+          <button id="exampleBtn" class="secondary">Load Your Example</button>
+          <button id="copyBtn" class="secondary">Copy</button>
+          <button id="exportCsvBtn" class="secondary">Export CSV</button>
+          <button id="screenshotBtn" class="secondary">Screenshot</button>
+        </div>
+      </div>
 
-          <div class="result" id="resultBox"></div>
+      <div class="card" style="margin-top:12px">
+        <h3>Tips</h3>
+        <ul class="small muted">
+          <li>CM1: Gross contribution after tax, COGS, Opex, Commission</li>
+          <li>CM2: CM1 minus Marketing</li>
+          <li>Real Profit: What you actually keep</li>
+        </ul>
+      </div>
+    </div>
 
-          <!-- CM1 / CM2 boxes -->
-          <div class="cm1-box" id="cm1Box" style="display:none">
-            <div class="big" id="cm1Val">-</div>
-            <div class="muted">CM1</div>
-            <div class="cm-pct" id="cm1Pct">-</div>
-          </div>
-
-          <div class="cm2-box" id="cm2Box" style="display:none">
-            <div class="big" id="cm2Val">-</div>
-            <div class="muted">CM2 (after Marketing)</div>
-            <div class="cm-pct" id="cm2Pct">-</div>
-          </div>
-
-          <!-- Override panel -->
-          <div id="overridePanel" class="override-panel" style="display:none">
-            <strong>Edit per-combination values</strong>
-            <div class="override-header">
-              <div>Platform</div><div>SKU Code</div><div>Product</div><div>COGS</div><div>Disc %</div><div>Opex</div><div>Delivery</div><div>Marketing</div>
-            </div>
-            <div id="overrideRows"></div>
-            <button id="resetOverrides" class="reset-btn">Reset Overrides</button>
-          </div>
-
-          <!-- LOGIC SECTION (UPDATED) -->
-          <div class="note" style="margin-top:12px">
-            <strong>Your Logic:</strong><br>
-            Net Revenue = SP ÷ 1.18 (18% GST included in SP)<br>
-            Settlement = SP − Commission<br>
-            CM1 = Net − COGS − Opex − Commission<br>
-            CM2 = CM1 − Marketing
-          </div>
-
-          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-            <button id="calcBtn">Calculate</button>
-            <button id="exampleBtn">Load Your Example</button>
-            <button id="copyBtn">Copy</button>
-            <button id="exportCsvBtn">Export CSV</button>
-            <button id="screenshotBtn">Screenshot</button>
+    <!-- ADVANCED / MANAGE (always available, outside the 2-step flow) -->
+    <div class="card" style="margin-top:12px">
+      <div class="collapsible-header" id="advancedToggle">
+        <h3 style="margin:0">⚙ Manage Platforms &amp; Data</h3>
+        <span class="small muted" id="advancedChevron">Show ▾</span>
+      </div>
+      <div class="collapsible-body" id="advancedBody" style="display:none">
+        <h4 style="margin:0 0 8px 0">Platforms</h4>
+        <div class="list" id="platformList"></div>
+        <div class="add-section">
+          <h4 style="margin:0 0 8px 0;font-size:14px">Add Custom Platform</h4>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input id="platformName" placeholder="Platform name" type="text" style="flex:1">
+            <input id="platformCommission" placeholder="Commission %" type="number" style="width:80px">
+            <select id="platformBase" style="width:70px">
+              <option value="SP">on SP</option>
+              <option value="MRP">on MRP</option>
+            </select>
+            <button id="addPlatformBtn">Add</button>
           </div>
         </div>
 
-        <div class="card" style="margin-top:12px">
-          <h3>Tips</h3>
-          <ul class="small muted">
-            <li>CM1: Gross contribution after tax, COGS, Opex, Commission</li>
-            <li>CM2: CM1 minus Marketing</li>
-            <li>Real Profit: What you actually keep</li>
-          </ul>
+        <h4 style="margin:16px 0 8px 0">Saved Data</h4>
+        <div style="display:flex;gap:8px">
+          <button id="exportBtn" class="secondary">Export (JSON)</button>
+          <button id="clearBtn" class="secondary">Clear All</button>
         </div>
       </div>
     </div>
@@ -235,18 +330,30 @@
   <script>
   (function(){
     const LS_KEY = 'ecom_mc_v2';
+    const THEME_KEY = 'ecom_mc_theme';
     let state = {platforms: [], skus: []};
     let editingPlatformIdx = -1;
-    let overrides = {};
+    let overrides = {}; // keyed by platform name now (product is fixed per calculation)
+
+    let step = 1;
+    let selection = { mode:'single', single:null, combo:['','',''], comboMrp:null };
+
+    const OPEX_DEFAULTS = { ZEPTO:10, BLINKIT:10, SWIGGY:10, NYKAA:10, PURPPLE:10, AMAZON:15, FLIPKART:15, MYNTRA:15 };
 
     // ----- ELEMENTS -----
     const els = {
+      themeToggleBtn: document.getElementById('themeToggleBtn'),
+
+      skuWidgetBtn: document.getElementById('skuWidgetBtn'),
+      skuDot: document.getElementById('skuDot'),
+      skuWidgetLabel: document.getElementById('skuWidgetLabel'),
+      skuPopover: document.getElementById('skuPopover'),
+
       platformName: document.getElementById('platformName'),
       platformCommission: document.getElementById('platformCommission'),
       platformBase: document.getElementById('platformBase'),
       addPlatformBtn: document.getElementById('addPlatformBtn'),
       platformList: document.getElementById('platformList'),
-      platformSelections: document.getElementById('platformSelections'),
 
       csvFile: document.getElementById('csvFile'),
       importCsvBtn: document.getElementById('importCsvBtn'),
@@ -261,18 +368,41 @@
       skuDetailSave: document.getElementById('skuDetailSave'),
       skuDetailDelete: document.getElementById('skuDetailDelete'),
       skuCount: document.getElementById('skuCount'),
-      skuSearch: document.getElementById('skuSearch'),
-      skuSelections: document.getElementById('skuSelections'),
+
+      stepTab1: document.getElementById('stepTab1'),
+      stepTab2: document.getElementById('stepTab2'),
+      step1Panel: document.getElementById('step1Panel'),
+      step2Panel: document.getElementById('step2Panel'),
+
+      modeSingleTab: document.getElementById('modeSingleTab'),
+      modeComboTab: document.getElementById('modeComboTab'),
+      singleModePanel: document.getElementById('singleModePanel'),
+      comboModePanel: document.getElementById('comboModePanel'),
+      singleSkuSearch: document.getElementById('singleSkuSearch'),
+      singleSkuResults: document.getElementById('singleSkuResults'),
+      singleSelectedBox: document.getElementById('singleSelectedBox'),
+      singleSelectedText: document.getElementById('singleSelectedText'),
+      singleChangeBtn: document.getElementById('singleChangeBtn'),
+
+      comboSlots: document.getElementById('comboSlots'),
+      addComboProductBtn: document.getElementById('addComboProductBtn'),
+      comboSummaryBox: document.getElementById('comboSummaryBox'),
+      comboSummaryText: document.getElementById('comboSummaryText'),
+      comboMrpInput: document.getElementById('comboMrpInput'),
+
+      nextToStep2Btn: document.getElementById('nextToStep2Btn'),
+      backToStep1Btn: document.getElementById('backToStep1Btn'),
+      step2ProductSummary: document.getElementById('step2ProductSummary'),
+
+      selectAllPlatforms: document.getElementById('selectAllPlatforms'),
+      platformChips: document.getElementById('platformChips'),
 
       discount: document.getElementById('discount'),
-      opex: document.getElementById('opex'),
       delivery: document.getElementById('delivery'),
       marketing: document.getElementById('marketing'),
       cogs: document.getElementById('cogs'),
 
-      resultBox: document.getElementById('resultBox'),
-      cm1Box: document.getElementById('cm1Box'), cm1Val: document.getElementById('cm1Val'), cm1Pct: document.getElementById('cm1Pct'),
-      cm2Box: document.getElementById('cm2Box'), cm2Val: document.getElementById('cm2Val'), cm2Pct: document.getElementById('cm2Pct'),
+      resultsContainer: document.getElementById('resultsContainer'),
 
       overridePanel: document.getElementById('overridePanel'),
       overrideRows: document.getElementById('overrideRows'),
@@ -280,8 +410,60 @@
 
       calcBtn: document.getElementById('calcBtn'), exampleBtn: document.getElementById('exampleBtn'),
       copyBtn: document.getElementById('copyBtn'), exportCsvBtn: document.getElementById('exportCsvBtn'),
-      screenshotBtn: document.getElementById('screenshotBtn')
+      screenshotBtn: document.getElementById('screenshotBtn'),
+
+      advancedToggle: document.getElementById('advancedToggle'),
+      advancedBody: document.getElementById('advancedBody'),
+      advancedChevron: document.getElementById('advancedChevron'),
+      exportBtn: document.getElementById('exportBtn'),
+      clearBtn: document.getElementById('clearBtn')
     };
+
+    // ----- THEME -----
+    function applyTheme(t){
+      document.documentElement.setAttribute('data-theme', t);
+      els.themeToggleBtn.textContent = t==='dark' ? '☀️' : '🌙';
+    }
+    function initTheme(){
+      let saved = 'light';
+      try{ saved = localStorage.getItem(THEME_KEY) || 'light'; }catch(e){}
+      applyTheme(saved);
+    }
+    els.themeToggleBtn.addEventListener('click', ()=>{
+      const cur = document.documentElement.getAttribute('data-theme')==='dark' ? 'dark' : 'light';
+      const next = cur==='dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+    });
+    initTheme();
+
+    // ----- SKU POPOVER -----
+    els.skuWidgetBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      els.skuPopover.classList.toggle('open');
+    });
+    document.addEventListener('click', (e)=>{
+      if(!els.skuPopover.contains(e.target) && e.target!==els.skuWidgetBtn && !els.skuWidgetBtn.contains(e.target)){
+        els.skuPopover.classList.remove('open');
+      }
+    });
+    function updateSkuWidget(){
+      const n = state.skus.length;
+      if(n>0){
+        els.skuDot.classList.remove('empty');
+        els.skuWidgetLabel.textContent = `✓ SKU Sheet loaded — ${n} product${n===1?'':'s'}`;
+      }else{
+        els.skuDot.classList.add('empty');
+        els.skuWidgetLabel.textContent = 'Upload SKU Sheet';
+      }
+    }
+
+    // ----- ADVANCED COLLAPSIBLE -----
+    els.advancedToggle.addEventListener('click', ()=>{
+      const open = els.advancedBody.style.display!=='none';
+      els.advancedBody.style.display = open ? 'none' : 'block';
+      els.advancedChevron.textContent = open ? 'Show ▾' : 'Hide ▴';
+    });
 
     // ----- INIT -----
     async function load(){
@@ -306,6 +488,9 @@
       }
       let migrated=false;
       state.platforms.forEach(p=>{ if(p.name==='ZEPT O'){ p.name='ZEPTO'; migrated=true; } });
+      // Add new platforms (Change 4) without disturbing existing ones/users
+      if(!state.platforms.some(p=>p.name==='FLIPKART')){ state.platforms.push({name:'FLIPKART',commission:30,base:'SP'}); migrated=true; }
+      if(!state.platforms.some(p=>p.name==='MYNTRA')){ state.platforms.push({name:'MYNTRA',commission:30,base:'SP'}); migrated=true; }
       state.skus.forEach(s=> {if(s.cogs===undefined) s.cogs=0; if(s.name===undefined) s.name='';});
       if(migrated) save();
       renderAll();
@@ -328,7 +513,7 @@
       }
     }
 
-    // ----- COMMISSION -----
+    // ----- COMMISSION (unchanged formulas) -----
     function computeCommission(sp,mrp,platform){
       if(platform.type==='amazon'){
         let referral=0;
@@ -343,7 +528,7 @@
       }
     }
 
-    // ----- RENDER (unchanged) -----
+    // ----- RENDER: PLATFORM MANAGEMENT (advanced) -----
     function renderPlatforms(){
       els.platformList.innerHTML='';
       state.platforms.forEach((p,idx)=>{
@@ -363,20 +548,39 @@
         div.appendChild(row);
         els.platformList.appendChild(div);
       });
-      renderPlatformCheckboxes();
+      renderPlatformChips();
     }
 
-    function renderPlatformCheckboxes(){
-      els.platformSelections.innerHTML='';
+    function renderPlatformChips(){
+      const checkedSet = new Set(Array.from(els.platformChips.querySelectorAll('input:checked')).map(cb=>cb.value));
+      els.platformChips.innerHTML='';
       state.platforms.forEach(p=>{
-        const item=document.createElement('div');
-        item.className='checkbox-item';
         const id=`plat_${p.name}`;
-        item.innerHTML=`<input type="checkbox" value="${escapeHtml(p.name)}" id="${id}">
-                        <label for="${id}" style="margin:0;cursor:pointer;flex:1">${escapeHtml(p.name)}</label>`;
-        els.platformSelections.appendChild(item);
+        const chip=document.createElement('label');
+        chip.className='platform-chip'+(checkedSet.has(p.name)?' checked':'');
+        chip.setAttribute('for', id);
+        chip.innerHTML=`<input type="checkbox" value="${escapeHtml(p.name)}" id="${id}" ${checkedSet.has(p.name)?'checked':''}><span>${escapeHtml(p.name)}</span>`;
+        els.platformChips.appendChild(chip);
       });
     }
+
+    els.platformChips.addEventListener('change', (e)=>{
+      if(e.target.matches('input[type=checkbox]')){
+        e.target.closest('.platform-chip').classList.toggle('checked', e.target.checked);
+        ensureOpexDefaultsForSelected();
+        calculate();
+      }
+    });
+
+    els.selectAllPlatforms.addEventListener('change', ()=>{
+      const checked = els.selectAllPlatforms.checked;
+      els.platformChips.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+        cb.checked = checked;
+        cb.closest('.platform-chip').classList.toggle('checked', checked);
+      });
+      ensureOpexDefaultsForSelected();
+      calculate();
+    });
 
     els.addPlatformBtn.addEventListener('click',()=>{
       const name=els.platformName.value.trim();
@@ -395,9 +599,10 @@
       save(); renderAll();
     });
 
+    // ----- SKU SHEET (upload/manage — logic unchanged, only relocated) -----
     function renderSkus(){
       renderSkuManager();
-      renderSkuCheckboxes();
+      updateSkuWidget();
     }
 
     function renderSkuManager(){
@@ -433,7 +638,7 @@
       state.skus[idx].name = els.skuDetailName.value.trim();
       state.skus[idx].mrp = parseFloat(els.skuDetailMrp.value) || state.skus[idx].mrp;
       state.skus[idx].cogs = parseFloat(els.skuDetailCogs.value) || 0;
-      save(); renderAll(); await persistSkus();
+      save(); renderAll(); refreshSelectionUI(); await persistSkus();
     });
 
     els.skuDetailDelete.addEventListener('click', async ()=>{
@@ -441,27 +646,8 @@
       if(!confirm('Delete '+code+'?')) return;
       const idx = state.skus.findIndex(s=>s.sku===code); if(idx===-1) return;
       state.skus.splice(idx,1);
-      save(); renderAll(); await persistSkus();
+      save(); renderAll(); refreshSelectionUI(); await persistSkus();
     });
-
-    function renderSkuCheckboxes(){
-      const filter = (els.skuSearch && els.skuSearch.value || '').trim().toLowerCase();
-      const checkedSet = new Set(Array.from(els.skuSelections.querySelectorAll('input:checked')).map(cb=>cb.value));
-      els.skuSelections.innerHTML='';
-      state.skus
-        .filter(s => !filter || s.sku.toLowerCase().includes(filter) || (s.name||'').toLowerCase().includes(filter))
-        .forEach(s=>{
-          const item=document.createElement('div');
-          item.className='checkbox-item';
-          const id=`sku_${s.sku}`;
-          const label = s.name ? `${escapeHtml(s.name)} <span class="muted">(${escapeHtml(s.sku)})</span>` : escapeHtml(s.sku);
-          item.innerHTML=`<input type="checkbox" value="${escapeHtml(s.sku)}" id="${id}" ${checkedSet.has(s.sku)?'checked':''}>
-                          <label for="${id}" style="margin:0;cursor:pointer;flex:1">${label} <span class="muted">— ₹${s.mrp}, COGS ₹${s.cogs}</span></label>`;
-          els.skuSelections.appendChild(item);
-        });
-    }
-
-    if(els.skuSearch) els.skuSearch.addEventListener('input', renderSkuCheckboxes);
 
     els.importCsvBtn.addEventListener('click',()=>{
       const f=els.csvFile.files[0]; if(!f) return alert('Choose file');
@@ -476,7 +662,7 @@
           if(sku && !isNaN(mrp)) parsed.push({sku,name,mrp,cogs});
         });
         state.skus=parsed;
-        save(); renderAll();
+        save(); renderAll(); refreshSelectionUI();
         await persistSkus();
         alert('Uploaded '+parsed.length+' SKUs — saved to your account.');
       };
@@ -490,29 +676,187 @@
       const a=document.createElement('a'); a.href=url; a.download='sample_skus.csv'; a.click(); URL.revokeObjectURL(url);
     });
 
-    els.skuSelections.addEventListener('change',()=>{
-      const checked=Array.from(els.skuSelections.querySelectorAll('input:checked')).map(cb=>cb.value);
-      if(checked.length===1){
-        const sku=state.skus.find(s=>s.sku===checked[0]);
-        if(sku) els.cogs.value=sku.cogs;
-      }else{
-        els.cogs.value=0;
+    // ----- STEP 1: PRODUCT SELECTION (Single / Combo) -----
+    function setMode(mode){
+      selection.mode = mode;
+      els.modeSingleTab.classList.toggle('active', mode==='single');
+      els.modeComboTab.classList.toggle('active', mode==='combo');
+      els.singleModePanel.style.display = mode==='single' ? '' : 'none';
+      els.comboModePanel.style.display = mode==='combo' ? '' : 'none';
+      updateNextButton();
+    }
+    els.modeSingleTab.addEventListener('click', ()=> setMode('single'));
+    els.modeComboTab.addEventListener('click', ()=> setMode('combo'));
+
+    function skuLabel(s){ return s.name ? `${s.name} (${s.sku})` : s.sku; }
+
+    // Single mode search
+    els.singleSkuSearch.addEventListener('input', ()=>{
+      const q = els.singleSkuSearch.value.trim().toLowerCase();
+      if(!q){ els.singleSkuResults.style.display='none'; els.singleSkuResults.innerHTML=''; return; }
+      const matches = state.skus.filter(s=> s.sku.toLowerCase().includes(q) || (s.name||'').toLowerCase().includes(q)).slice(0,20);
+      if(!matches.length){ els.singleSkuResults.style.display='block'; els.singleSkuResults.innerHTML='<div class="search-result-item muted">No matches</div>'; return; }
+      els.singleSkuResults.innerHTML = matches.map(s=>`<div class="search-result-item" data-sku="${escapeHtml(s.sku)}">${escapeHtml(skuLabel(s))} — ₹${s.mrp}</div>`).join('');
+      els.singleSkuResults.style.display='block';
+    });
+    els.singleSkuResults.addEventListener('click', (e)=>{
+      const item = e.target.closest('.search-result-item');
+      if(!item || !item.dataset.sku) return;
+      selection.single = item.dataset.sku;
+      els.singleSkuResults.style.display='none';
+      els.singleSkuSearch.value='';
+      renderSingleSelected();
+      onProductChanged();
+    });
+    els.singleChangeBtn.addEventListener('click', ()=>{
+      selection.single = null;
+      renderSingleSelected();
+      updateNextButton();
+    });
+    function renderSingleSelected(){
+      const s = state.skus.find(x=>x.sku===selection.single);
+      if(!s){ els.singleSelectedBox.style.display='none'; return; }
+      els.singleSelectedText.innerHTML = `<strong>${escapeHtml(skuLabel(s))}</strong><div class="small muted">MRP ₹${s.mrp} · COGS ₹${s.cogs}</div>`;
+      els.singleSelectedBox.style.display='flex';
+      updateNextButton();
+    }
+
+    // Combo mode
+    function renderComboSlots(){
+      els.comboSlots.innerHTML='';
+      const slotsToShow = Math.min(3, Math.max(2, selection.combo.filter(Boolean).length + (selection.combo.filter(Boolean).length<3?1:0)));
+      for(let i=0;i<slotsToShow;i++){
+        const row=document.createElement('div');
+        row.className='combo-slot';
+        const sel=document.createElement('select');
+        sel.innerHTML = '<option value="">— Select product '+(i+1)+' —</option>' +
+          state.skus.map(s=>`<option value="${escapeHtml(s.sku)}" ${selection.combo[i]===s.sku?'selected':''}>${escapeHtml(skuLabel(s))} — ₹${s.mrp}</option>`).join('');
+        sel.addEventListener('change', ()=>{
+          selection.combo[i]=sel.value;
+          renderComboSlots();
+          updateComboSummary();
+          onProductChanged();
+        });
+        row.appendChild(sel);
+        if(selection.combo[i]){
+          const rm=document.createElement('button');
+          rm.type='button'; rm.className='secondary compact-btn'; rm.textContent='✕';
+          rm.onclick=()=>{ selection.combo[i]=''; renderComboSlots(); updateComboSummary(); onProductChanged(); };
+          row.appendChild(rm);
+        }
+        els.comboSlots.appendChild(row);
       }
+    }
+    els.addComboProductBtn.addEventListener('click', ()=>{
+      const filled = selection.combo.filter(Boolean).length;
+      if(filled>=3) return alert('Combo supports up to 3 products');
+      renderComboSlots();
+    });
+    function updateComboSummary(){
+      const codes = selection.combo.filter(Boolean);
+      const objs = codes.map(c=>state.skus.find(s=>s.sku===c)).filter(Boolean);
+      if(objs.length<2){ els.comboSummaryBox.style.display='none'; updateNextButton(); return; }
+      const sumMrp = objs.reduce((a,b)=>a+b.mrp,0);
+      const sumCogs = objs.reduce((a,b)=>a+b.cogs,0);
+      if(els.comboMrpInput.value==='' || els.comboMrpInput.dataset.auto==='1'){
+        els.comboMrpInput.value = sumMrp;
+        els.comboMrpInput.dataset.auto='1';
+      }
+      els.comboSummaryText.innerHTML = `<strong>Combo: ${objs.map(o=>escapeHtml(o.name||o.sku)).join(' + ')}</strong><div class="small muted">Combined cost (COGS) ₹${sumCogs} · Sum of MRPs ₹${sumMrp}</div>`;
+      els.comboSummaryBox.style.display='flex';
+      updateNextButton();
+    }
+    els.comboMrpInput.addEventListener('input', ()=>{
+      els.comboMrpInput.dataset.auto='0';
+      selection.comboMrp = els.comboMrpInput.value==='' ? null : parseFloat(els.comboMrpInput.value);
+      onProductChanged();
     });
 
-    function getOverridesKey(p,s){ return `${p}||${s}`; }
+    function isSelectionValid(){
+      if(selection.mode==='single') return !!selection.single;
+      return selection.combo.filter(Boolean).length>=2;
+    }
+    function updateNextButton(){
+      els.nextToStep2Btn.disabled = !isSelectionValid();
+    }
+    function onProductChanged(){
+      updateNextButton();
+      // If already in step 2 and the underlying product changed, refresh results live
+      if(step===2) calculate();
+    }
 
+    function refreshSelectionUI(){
+      // re-render dependent widgets if the sku sheet changed underneath a selection
+      if(selection.mode==='single') renderSingleSelected();
+      else { renderComboSlots(); updateComboSummary(); }
+    }
+
+    // ----- PRODUCT RESOLUTION -----
+    function getCurrentProduct(){
+      if(selection.mode==='single'){
+        if(!selection.single) return null;
+        const s = state.skus.find(x=>x.sku===selection.single);
+        if(!s) return null;
+        return { label: skuLabel(s), mrp:s.mrp, cogs:s.cogs, codes:[s.sku] };
+      }else{
+        const codes = selection.combo.filter(Boolean);
+        if(codes.length<2) return null;
+        const objs = codes.map(c=>state.skus.find(s=>s.sku===c)).filter(Boolean);
+        if(objs.length!==codes.length) return null;
+        const sumMrp = objs.reduce((a,b)=>a+b.mrp,0);
+        const sumCogs = objs.reduce((a,b)=>a+b.cogs,0);
+        const mrp = (selection.comboMrp!=null && !isNaN(selection.comboMrp)) ? selection.comboMrp : sumMrp;
+        return { label:'Combo: '+objs.map(o=>o.name||o.sku).join(' + '), mrp, cogs:sumCogs, codes };
+      }
+    }
+
+    // ----- STEP NAVIGATION -----
+    function goToStep(n){
+      step = n;
+      els.stepTab1.classList.toggle('active', n===1);
+      els.stepTab2.classList.toggle('active', n===2);
+      els.step1Panel.style.display = n===1 ? '' : 'none';
+      els.step2Panel.style.display = n===2 ? '' : 'none';
+      if(n===2){
+        const product = getCurrentProduct();
+        if(product){
+          els.step2ProductSummary.textContent = product.label + ' · MRP ₹'+product.mrp+' · COGS ₹'+product.cogs;
+          els.discount.value = 30; // reset default whenever a new product enters step 2
+          els.cogs.value = product.cogs;
+        }
+        ensureOpexDefaultsForSelected();
+        calculate();
+      }
+    }
+    els.nextToStep2Btn.addEventListener('click', ()=>{
+      if(!isSelectionValid()) return;
+      goToStep(2);
+    });
+    els.backToStep1Btn.addEventListener('click', ()=> goToStep(1));
+    els.stepTab1.addEventListener('click', ()=> goToStep(1));
+    els.stepTab2.addEventListener('click', ()=>{ if(isSelectionValid()) goToStep(2); });
+
+    function ensureOpexDefaultsForSelected(){
+      const selected = Array.from(els.platformChips.querySelectorAll('input:checked')).map(cb=>cb.value);
+      const plats = selected.length ? selected : state.platforms.map(p=>p.name);
+      plats.forEach(name=>{
+        if(!overrides[name]) overrides[name]={};
+        if(overrides[name].opex===undefined && OPEX_DEFAULTS[name]!==undefined){
+          overrides[name].opex = OPEX_DEFAULTS[name];
+        }
+      });
+    }
+
+    // ----- OVERRIDES (now keyed by platform only) -----
     function renderOverrides(results){
       els.overrideRows.innerHTML='';
       results.forEach(r=>{
-        const key = getOverridesKey(r.platform, r.sku);
+        const key = r.platform;
         const ov = overrides[key] || {};
         const row = document.createElement('div');
         row.className = 'override-row';
         row.innerHTML = `
           <div>${escapeHtml(r.platform)}</div>
-          <div>${escapeHtml(r.sku)}</div>
-          <div>${escapeHtml(r.skuName||'—')}</div>
           <input type="number" placeholder="COGS" data-key="${key}" data-field="cogs" value="${ov.cogs ?? ''}">
           <input type="number" placeholder="%" data-key="${key}" data-field="discount" value="${ov.discount ?? ''}">
           <input type="number" placeholder="Opex" data-key="${key}" data-field="opex" value="${ov.opex ?? ''}">
@@ -536,20 +880,23 @@
     }
 
     els.resetOverrides.addEventListener('click', () => {
-      if (confirm('Reset all per-combo overrides?')) {
+      if (confirm('Reset all per-platform overrides?')) {
         overrides = {};
+        ensureOpexDefaultsForSelected();
         calculate();
       }
     });
 
-    // ----- CALCULATION: FIXED NET & CM1 -----
+    // ----- CALCULATION (formulas unchanged) -----
     function computeResults(){
-      const plats=Array.from(els.platformSelections.querySelectorAll('input:checked')).map(cb=>cb.value);
-      const skus=Array.from(els.skuSelections.querySelectorAll('input:checked')).map(cb=>cb.value);
-      if(!plats.length||!skus.length) return [];
+      const product = getCurrentProduct();
+      if(!product) return [];
+
+      const selectedPlats = Array.from(els.platformChips.querySelectorAll('input:checked')).map(cb=>cb.value);
+      const plats = selectedPlats.length ? selectedPlats : state.platforms.map(p=>p.name); // none selected = show all
 
       const globalDisc = parseFloat(els.discount.value)||0;
-      const globalOpex = parseFloat(els.opex.value)||0;
+      const globalOpex = 0; // fallback only; per-platform defaults live in overrides
       const globalDeliv = parseFloat(els.delivery.value)||0;
       const globalMark = parseFloat(els.marketing.value)||0;
       const globalCogs = parseFloat(els.cogs.value)||0;
@@ -558,90 +905,72 @@
       plats.forEach(pname=>{
         const platform=state.platforms.find(p=>p.name===pname);
         if(!platform) return;
-        skus.forEach(sname=>{
-          const sku=state.skus.find(s=>s.sku===sname);
-          if(!sku) return;
 
-          const key = getOverridesKey(pname, sname);
-          const ov = overrides[key] || {};
+        const ov = overrides[pname] || {};
 
-          const disc = ov.discount !== undefined ? ov.discount : globalDisc;
-          const sp = round2(sku.mrp * (1 - disc/100));
-          const comm = computeCommission(sp, sku.mrp, platform);
-          const settlement = round2(sp - comm.total);
+        const disc = ov.discount !== undefined ? ov.discount : globalDisc;
+        const sp = round2(product.mrp * (1 - disc/100));
+        const comm = computeCommission(sp, product.mrp, platform);
+        const settlement = round2(sp - comm.total);
 
-          // FIXED: Net = SP / 1.18
-          const netRevenue = round2(sp / 1.18);
+        const netRevenue = round2(sp / 1.18);
 
-          const cogs = ov.cogs !== undefined ? ov.cogs : globalCogs;
-          const opex = ov.opex !== undefined ? ov.opex : globalOpex;
-          const delivery = ov.delivery !== undefined ? ov.delivery : globalDeliv;
-          const marketing = ov.marketing !== undefined ? ov.marketing : globalMark;
+        const cogs = ov.cogs !== undefined ? ov.cogs : globalCogs;
+        const opex = ov.opex !== undefined ? ov.opex : globalOpex;
+        const delivery = ov.delivery !== undefined ? ov.delivery : globalDeliv;
+        const marketing = ov.marketing !== undefined ? ov.marketing : globalMark;
 
-          // FIXED: CM1 = Net - COGS - Opex - Commission
-          const cm1 = round2(netRevenue - cogs - opex - comm.total);
-          const cm1Pct = netRevenue!==0 ? round2((cm1/netRevenue)*100) : 0;
-          const cm2 = round2(cm1 - marketing);
-          const cm2Pct = netRevenue!==0 ? round2((cm2/netRevenue)*100) : 0;
+        const cm1 = round2(netRevenue - cogs - opex - comm.total);
+        const cm1Pct = netRevenue!==0 ? round2((cm1/netRevenue)*100) : 0;
+        const cm2 = round2(cm1 - marketing);
+        const cm2Pct = netRevenue!==0 ? round2((cm2/netRevenue)*100) : 0;
 
-          results.push({platform:pname, sku:sname, skuName: sku.name||'', sp, settlement, netRevenue, commTotal:comm.total, cogs, opex, delivery, marketing, cm1, cm1Pct, cm2, cm2Pct, commBreakdown:comm.breakdown});
-        });
+        results.push({platform:pname, sku:product.codes.join('+'), skuName: product.label, sp, settlement, netRevenue, commTotal:comm.total, cogs, opex, delivery, marketing, cm1, cm1Pct, cm2, cm2Pct, commBreakdown:comm.breakdown});
       });
       return results;
     }
 
-    function calculate(){
-      els.resultBox.innerHTML=''; els.cm1Box.style.display='none'; els.cm2Box.style.display='none';
-      els.overridePanel.style.display='none';
-      const results=computeResults();
-      if(!results.length) return alert('Select at least one platform and one SKU');
-
-      if(results.length>6){
-        els.resultBox.innerHTML='<div class="muted">Too many results – export CSV.</div>';
-        return;
+    function platformResultCardHtml(r){
+      let breakdown='';
+      if(r.commBreakdown){
+        breakdown=`<div class="breakdown">
+          <div><strong>Commission:</strong></div>
+          <div>Referral: ₹ ${formatNumber(r.commBreakdown.referral)}</div>
+          <div>Fixed: ₹ ${formatNumber(r.commBreakdown.fixed)}</div>
+          <div>Logistics: ₹ ${formatNumber(r.commBreakdown.logistics)}</div>
+          <div>Pick & Pack: ₹ ${formatNumber(r.commBreakdown.pickpack)}</div>
+          <div><strong>Total: ₹ ${formatNumber(r.commTotal)}</strong></div>
+        </div>`;
       }
-
-      if(results.length===1){
-        const r=results[0];
-        let breakdown='';
-        if(r.commBreakdown){
-          breakdown=`<div class="breakdown">
-            <div><strong>Commission:</strong></div>
-            <div>Referral: ₹ ${formatNumber(r.commBreakdown.referral)}</div>
-            <div>Fixed: ₹ ${formatNumber(r.commBreakdown.fixed)}</div>
-            <div>Logistics: ₹ ${formatNumber(r.commBreakdown.logistics)}</div>
-            <div>Pick & Pack: ₹ ${formatNumber(r.commBreakdown.pickpack)}</div>
-            <div><strong>Total: ₹ ${formatNumber(r.commTotal)}</strong></div>
-          </div>`;
-        }
-        els.resultBox.innerHTML=`
-          <div class="calc-row"><div class="muted">Platform:</div><div style="margin-left:auto">${escapeHtml(r.platform)}</div></div>
-          <div class="calc-row"><div class="muted">Product:</div><div style="margin-left:auto">${escapeHtml(r.skuName||r.sku)}${r.skuName?' <span class="muted">('+escapeHtml(r.sku)+')</span>':''}</div></div>
+      return `
+        <div class="platform-result-card">
+          <h4>${escapeHtml(r.platform)}</h4>
+          <div class="calc-row"><div class="muted">Product:</div><div style="margin-left:auto">${escapeHtml(r.skuName)}</div></div>
           <div class="calc-row"><div class="muted">SP:</div><div style="margin-left:auto">₹ ${formatNumber(r.sp)}</div></div>
           <div class="calc-row"><div class="muted">Settlement:</div><div style="margin-left:auto">₹ ${formatNumber(r.settlement)}</div></div>
           <div class="calc-row"><div class="muted">Net (After 18% GST):</div><div style="margin-left:auto">₹ ${formatNumber(r.netRevenue)}</div></div>
           ${breakdown}
-        `;
-        els.cm1Val.textContent=(r.cm1>=0?'₹ ':'−₹ ')+formatNumber(Math.abs(r.cm1));
-        els.cm1Pct.textContent=r.cm1Pct+'%'; els.cm1Box.style.display='block';
-        els.cm2Val.textContent=(r.cm2>=0?'₹ ':'−₹ ')+formatNumber(Math.abs(r.cm2));
-        els.cm2Pct.textContent=r.cm2Pct+'%'; els.cm2Box.style.display='block';
-      }
-      else{
-        const table=document.createElement('table');
-        table.innerHTML='<thead><tr><th>Plat</th><th>SKU Code</th><th>Product</th><th>SP</th><th>Settlement</th><th>Net</th><th>Comm</th><th>CM1</th><th>CM1%</th><th>CM2</th><th>CM2%</th></tr></thead><tbody>';
-        results.forEach(r=>{
-          table.innerHTML+=`<tr>
-            <td>${escapeHtml(r.platform)}</td><td>${escapeHtml(r.sku)}</td><td>${escapeHtml(r.skuName||'—')}</td>
-            <td>₹ ${formatNumber(r.sp)}</td><td>₹ ${formatNumber(r.settlement)}</td>
-            <td>₹ ${formatNumber(r.netRevenue)}</td><td>₹ ${formatNumber(r.commTotal)}</td>
-            <td>${(r.cm1>=0?'':'−')}₹ ${formatNumber(Math.abs(r.cm1))}</td><td>${r.cm1Pct}%</td>
-            <td>${(r.cm2>=0?'':'−')}₹ ${formatNumber(Math.abs(r.cm2))}</td><td>${r.cm2Pct}%</td>
-          </tr>`;
-        });
-        table.innerHTML+='</tbody>';
-        els.resultBox.appendChild(table);
-      }
+          <div class="cm1-box">
+            <div class="big">${(r.cm1>=0?'₹ ':'−₹ ')+formatNumber(Math.abs(r.cm1))}</div>
+            <div class="muted">CM1</div>
+            <div class="cm-pct">${r.cm1Pct}%</div>
+          </div>
+          <div class="cm2-box">
+            <div class="big">${(r.cm2>=0?'₹ ':'−₹ ')+formatNumber(Math.abs(r.cm2))}</div>
+            <div class="muted">CM2 (after Marketing)</div>
+            <div class="cm-pct">${r.cm2Pct}%</div>
+          </div>
+        </div>`;
+    }
+
+    function calculate(){
+      els.resultsContainer.innerHTML='';
+      els.overridePanel.style.display='none';
+      const results=computeResults();
+      if(!results.length){ els.resultsContainer.innerHTML='<div class="muted">Select a product in Step 1 to see margins.</div>'; return; }
+
+      els.resultsContainer.classList.toggle('multi', results.length>1);
+      els.resultsContainer.innerHTML = results.map(platformResultCardHtml).join('');
 
       els.overridePanel.style.display='block';
       renderOverrides(results);
@@ -653,11 +982,15 @@
       const sidx=state.skus.findIndex(s=>s.sku==='CCBBSM01');
       if(sidx===-1) state.skus.push({sku:'CCBBSM01',name:'Sample Product',mrp:249,cogs:25});
       save(); renderAll();
-      const amazonCb=els.platformSelections.querySelector('input[value="AMAZON"]');
-      if(amazonCb) amazonCb.checked=true;
-      const skuCb=els.skuSelections.querySelector('input[value="CCBBSM01"]');
-      if(skuCb) skuCb.checked=true;
-      els.discount.value=40; els.opex.value=11; els.delivery.value=0; els.marketing.value=0; els.cogs.value=25;
+      selection.mode='single'; selection.single='CCBBSM01';
+      setMode('single'); renderSingleSelected();
+      goToStep(2);
+      els.platformChips.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+        const on = cb.value==='AMAZON';
+        cb.checked=on; cb.closest('.platform-chip').classList.toggle('checked', on);
+      });
+      els.discount.value=40; els.cogs.value=25; els.delivery.value=0; els.marketing.value=0;
+      overrides['AMAZON'] = Object.assign({}, overrides['AMAZON'], {opex:11});
       calculate();
     });
 
@@ -691,7 +1024,19 @@ CM2: ${r.cm2>=0?'':'-'}₹${formatNumber(Math.abs(r.cm2))} (${r.cm2Pct}%)`).join
       });
     });
 
-    function renderAll(){ renderPlatforms(); renderSkus(); }
+    els.exportBtn.addEventListener('click',()=>{
+      const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='ecom_margin_data.json'; a.click(); URL.revokeObjectURL(url);
+    });
+    els.clearBtn.addEventListener('click', async ()=>{
+      if(!confirm('Clear all saved platforms and SKUs?')) return;
+      state = {platforms:[], skus:[]};
+      overrides = {};
+      save(); await persistSkus(); await load(); refreshSelectionUI();
+    });
+
+    function renderAll(){ renderPlatforms(); renderSkus(); renderComboSlots(); }
     function round2(n){ return Math.round((n+Number.EPSILON)*100)/100; }
     function formatNumber(n){ return Math.abs(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -723,6 +1068,11 @@ CM2: ${r.cm2>=0?'':'-'}₹${formatNumber(Math.abs(r.cm2))} (${r.cm2Pct}%)`).join
       }
       return false;
     }
+
+    // ----- BOOTSTRAP -----
+    setMode('single');
+    renderComboSlots();
+    goToStep(1);
 
     checkAuth().then(ok=>{ if(ok) load(); });
   })();
