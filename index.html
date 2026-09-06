@@ -102,7 +102,30 @@
 
     .results-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:10px}
     @media(min-width:700px){.results-grid.multi{grid-template-columns:1fr 1fr}}
-    .platform-result-card{border:1px solid var(--border);border-radius:10px;padding:10px;background:var(--glass)}
+    .platform-result-card{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:10px;padding:14px 10px 10px 10px;background:color-mix(in srgb, var(--plat-a, var(--accent)) 6%, var(--glass))}
+    .platform-result-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg, var(--plat-a, var(--accent)), var(--plat-b, var(--border)), var(--plat-c, var(--plat-b, var(--border))));}
+    .prc-header h4{color:var(--plat-title, var(--text))}
+
+    /* Per-platform brand themes — light mode defaults, dark-mode variants override further down */
+    .platform-result-card[data-plat="AMAZON"]{--plat-a:#FF9900;--plat-b:var(--text);--plat-title:#CC7A00;}
+    .platform-result-card[data-plat="FLIPKART"]{--plat-a:#2874F0;--plat-b:#FFC700;--plat-title:#2874F0;}
+    .platform-result-card[data-plat="SWIGGY"]{--plat-a:#FC8019;--plat-b:#C65102;--plat-title:#D96A00;}
+    .platform-result-card[data-plat="BLINKIT"]{--plat-a:#F0C020;--plat-b:var(--text);--plat-title:#A67C00;}
+    .platform-result-card[data-plat="ZEPTO"]{--plat-a:#8B2CF5;--plat-b:var(--text);--plat-title:#7A1FD9;}
+    .platform-result-card[data-plat="MEESHO"]{--plat-a:#C9A6FF;--plat-b:#6A1FAE;--plat-title:#6A1FAE;}
+    .platform-result-card[data-plat="PURPPLE"]{--plat-a:#4B0082;--plat-b:var(--text);--plat-title:#4B0082;}
+    .platform-result-card[data-plat="NYKAA"]{--plat-a:#FC2779;--plat-b:#FF8FB8;--plat-title:#D81159;}
+    .platform-result-card[data-plat="MYNTRA"]{--plat-a:#5B2C87;--plat-b:#FFD200;--plat-c:#FF3F80;--plat-title:#7A3FA0;}
+
+    [data-theme="dark"] .platform-result-card[data-plat="AMAZON"]{--plat-a:#FFB84D;--plat-title:#FFB84D;}
+    [data-theme="dark"] .platform-result-card[data-plat="FLIPKART"]{--plat-a:#5B9BFF;--plat-b:#FFD84D;--plat-title:#7DB2FF;}
+    [data-theme="dark"] .platform-result-card[data-plat="SWIGGY"]{--plat-a:#FF9D4D;--plat-b:#FF7A29;--plat-title:#FF9D4D;}
+    [data-theme="dark"] .platform-result-card[data-plat="BLINKIT"]{--plat-a:#FFD866;--plat-title:#FFD866;}
+    [data-theme="dark"] .platform-result-card[data-plat="ZEPTO"]{--plat-a:#B98CFF;--plat-title:#C9A6FF;}
+    [data-theme="dark"] .platform-result-card[data-plat="MEESHO"]{--plat-a:#E4D4FF;--plat-b:#9B4DFF;--plat-title:#D9BFFF;}
+    [data-theme="dark"] .platform-result-card[data-plat="PURPPLE"]{--plat-a:#A78BFA;--plat-title:#C4A6FF;}
+    [data-theme="dark"] .platform-result-card[data-plat="NYKAA"]{--plat-a:#FF6FA5;--plat-b:#FFB3D1;--plat-title:#FF7FAE;}
+    [data-theme="dark"] .platform-result-card[data-plat="MYNTRA"]{--plat-a:#9B6DFF;--plat-b:#FFE066;--plat-c:#FF6FA0;--plat-title:#C9A6FF;}
     .platform-result-card h4{margin:0 0 6px 0;font-size:14px}
     .prc-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
     .prc-header h4{margin:0}
@@ -1011,7 +1034,7 @@
         </div>`;
 
       return `
-        <div class="platform-result-card">
+        <div class="platform-result-card" data-plat="${escapeHtml(r.platform)}">
           <div class="prc-header">
             <h4>${escapeHtml(r.platform)}</h4>
             <button type="button" class="expand-toggle secondary compact-btn" data-platform="${escapeHtml(r.platform)}">${expandedPlatforms.has(r.platform)?'Hide calculation ▴':'Show calculation ▾'}</button>
