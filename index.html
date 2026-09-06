@@ -104,6 +104,15 @@
     @media(min-width:700px){.results-grid.multi{grid-template-columns:1fr 1fr}}
     .platform-result-card{border:1px solid var(--border);border-radius:10px;padding:10px;background:var(--glass)}
     .platform-result-card h4{margin:0 0 6px 0;font-size:14px}
+    .prc-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+    .prc-header h4{margin:0}
+    .expand-toggle{font-size:11px;padding:5px 8px;white-space:nowrap}
+    .calc-steps-wrap{margin-top:10px}
+    .calc-steps{border-top:1px dashed var(--border);padding-top:8px}
+    .step-row{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:3px 0}
+    .step-row>div:first-child{color:var(--muted)}
+    .step-subrow{font-size:11px;color:var(--muted);margin:-2px 0 4px 0;padding-left:4px}
+    .step-total{font-weight:700;border-top:1px solid var(--border);margin-top:4px;padding-top:6px;color:var(--text)}
 
     .collapsible-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
     .collapsible-body{margin-top:10px}
@@ -969,38 +978,44 @@
         const cm2 = round2(cm1 - marketing);
         const cm2Pct = netRevenue!==0 ? round2((cm2/netRevenue)*100) : 0;
 
-        results.push({platform:pname, sku:product.codes.join('+'), skuName: product.label, sp, settlement, netRevenue, commTotal:comm.total, cogs, opex, delivery, marketing, cm1, cm1Pct, cm2, cm2Pct, commBreakdown:comm.breakdown});
+        results.push({platform:pname, sku:product.codes.join('+'), skuName: product.label, mrp:product.mrp, discPct:disc, discAmount:round2(product.mrp-sp), sp, settlement, netRevenue, commTotal:comm.total, cogs, opex, delivery, marketing, cm1, cm1Pct, cm2, cm2Pct, commBreakdown:comm.breakdown});
       });
       return results;
     }
 
     function platformResultCardHtml(r){
-      let breakdown='';
+      let commLine='';
       if(r.commBreakdown && r.commBreakdown.type==='amazon'){
-        breakdown=`<div class="breakdown">
-          <div><strong>Commission:</strong></div>
-          <div>Referral: ₹ ${formatNumber(r.commBreakdown.referral)}</div>
-          <div>Fixed: ₹ ${formatNumber(r.commBreakdown.fixed)}</div>
-          <div>Logistics: ₹ ${formatNumber(r.commBreakdown.logistics)}</div>
-          <div>Pick & Pack: ₹ ${formatNumber(r.commBreakdown.pickpack)}</div>
-          <div><strong>Total: ₹ ${formatNumber(r.commTotal)}</strong></div>
-        </div>`;
+        commLine=`<div class="step-row"><div>Commission</div><div>₹ ${formatNumber(r.commTotal)}</div></div>
+          <div class="step-subrow">Referral ₹${formatNumber(r.commBreakdown.referral)} + Fixed ₹${formatNumber(r.commBreakdown.fixed)} + Logistics ₹${formatNumber(r.commBreakdown.logistics)} + Pick&Pack ₹${formatNumber(r.commBreakdown.pickpack)}</div>`;
       }else if(r.commBreakdown && r.commBreakdown.type==='nykaa'){
-        breakdown=`<div class="breakdown">
-          <div><strong>Commission (on pre-GST MRP):</strong></div>
-          <div>MRP ÷ 1.18: ₹ ${formatNumber(r.commBreakdown.preTaxMrp)}</div>
-          <div>${r.commBreakdown.pct}% of that: ₹ ${formatNumber(r.commBreakdown.amount)}</div>
-          <div><strong>Total: ₹ ${formatNumber(r.commTotal)}</strong></div>
-        </div>`;
+        commLine=`<div class="step-row"><div>Commission</div><div>₹ ${formatNumber(r.commTotal)}</div></div>
+          <div class="step-subrow">${r.commBreakdown.pct}% of (MRP ÷ 1.18 = ₹${formatNumber(r.commBreakdown.preTaxMrp)})</div>`;
+      }else{
+        commLine=`<div class="step-row"><div>Commission</div><div>₹ ${formatNumber(r.commTotal)}</div></div>`;
       }
+
+      const steps = `
+        <div class="calc-steps">
+          <div class="step-row"><div>Product</div><div>${escapeHtml(r.skuName)}</div></div>
+          <div class="step-row"><div>MRP</div><div>₹ ${formatNumber(r.mrp)}</div></div>
+          <div class="step-row"><div>Selling Price (Gross Sale)</div><div>₹ ${formatNumber(r.sp)}</div></div>
+          <div class="step-row"><div>Net Sale (SP ÷ 1.18)</div><div>₹ ${formatNumber(r.netRevenue)}</div></div>
+          ${commLine}
+          <div class="step-row"><div>Discount Given</div><div>${r.discPct}% = ₹ ${formatNumber(r.discAmount)}</div></div>
+          <div class="step-row"><div>COGS</div><div>₹ ${formatNumber(r.cogs)}</div></div>
+          <div class="step-row"><div>Opex</div><div>₹ ${formatNumber(r.opex)}</div></div>
+          <div class="step-row step-total"><div>= CM1</div><div>${(r.cm1>=0?'₹ ':'−₹ ')+formatNumber(Math.abs(r.cm1))}</div></div>
+          <div class="step-row"><div>Marketing</div><div>₹ ${formatNumber(r.marketing)}</div></div>
+          <div class="step-row step-total"><div>= CM2</div><div>${(r.cm2>=0?'₹ ':'−₹ ')+formatNumber(Math.abs(r.cm2))}</div></div>
+        </div>`;
+
       return `
         <div class="platform-result-card">
-          <h4>${escapeHtml(r.platform)}</h4>
-          <div class="calc-row"><div class="muted">Product:</div><div style="margin-left:auto">${escapeHtml(r.skuName)}</div></div>
-          <div class="calc-row"><div class="muted">SP:</div><div style="margin-left:auto">₹ ${formatNumber(r.sp)}</div></div>
-          <div class="calc-row"><div class="muted">Settlement:</div><div style="margin-left:auto">₹ ${formatNumber(r.settlement)}</div></div>
-          <div class="calc-row"><div class="muted">Net (After 18% GST):</div><div style="margin-left:auto">₹ ${formatNumber(r.netRevenue)}</div></div>
-          ${breakdown}
+          <div class="prc-header">
+            <h4>${escapeHtml(r.platform)}</h4>
+            <button type="button" class="expand-toggle secondary compact-btn" data-platform="${escapeHtml(r.platform)}">${expandedPlatforms.has(r.platform)?'Hide calculation ▴':'Show calculation ▾'}</button>
+          </div>
           <div class="cm1-box">
             <div class="big">${(r.cm1>=0?'₹ ':'−₹ ')+formatNumber(Math.abs(r.cm1))}</div>
             <div class="muted">CM1</div>
@@ -1011,8 +1026,28 @@
             <div class="muted">CM2 (after Marketing)</div>
             <div class="cm-pct">${r.cm2Pct}%</div>
           </div>
+          <div class="calc-steps-wrap" style="display:${expandedPlatforms.has(r.platform)?'block':'none'}">${steps}</div>
         </div>`;
     }
+
+    let expandedPlatforms = new Set();
+    els.resultsContainer.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.expand-toggle');
+      if(!btn) return;
+      const pname = btn.dataset.platform;
+      const card = btn.closest('.platform-result-card');
+      const wrap = card.querySelector('.calc-steps-wrap');
+      if(expandedPlatforms.has(pname)){
+        expandedPlatforms.delete(pname);
+        wrap.style.display='none';
+        btn.textContent='Show calculation ▾';
+      }else{
+        expandedPlatforms.add(pname);
+        wrap.style.display='block';
+        btn.textContent='Hide calculation ▴';
+      }
+    });
+
 
     function calculate(){
       const results=computeResults();
