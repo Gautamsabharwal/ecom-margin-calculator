@@ -512,9 +512,9 @@
         state.platforms = [
           {name:'AMAZON',type:'amazon',fixedFees:[25,45,27]},
           {name:'NYKAA',type:'preTaxMrp',commissionPct:40},
-          {name:'SWIGGY',commission:25,base:'MRP'},
-          {name:'BLINKIT',commission:33,base:'MRP'},
-          {name:'ZEPTO',commission:30,base:'MRP'},
+          {name:'SWIGGY',type:'preTaxMrp',commissionPct:25},
+          {name:'BLINKIT',type:'preTaxMrp',commissionPct:33},
+          {name:'ZEPTO',type:'preTaxMrp',commissionPct:30},
           {name:'MEESHO',commission:0,base:'MRP'},
           {name:'PURPPLE',type:'preTaxMrp',commissionPct:28}
         ];
@@ -527,9 +527,9 @@
       const CANONICAL = [
         {name:'AMAZON', make:()=>({name:'AMAZON',type:'amazon',fixedFees:[25,45,27]})},
         {name:'NYKAA', make:()=>({name:'NYKAA',type:'preTaxMrp',commissionPct:40})},
-        {name:'SWIGGY', make:()=>({name:'SWIGGY',commission:25,base:'MRP'})},
-        {name:'BLINKIT', make:()=>({name:'BLINKIT',commission:33,base:'MRP'})},
-        {name:'ZEPTO', make:()=>({name:'ZEPTO',commission:30,base:'MRP'})},
+        {name:'SWIGGY', make:()=>({name:'SWIGGY',type:'preTaxMrp',commissionPct:25})},
+        {name:'BLINKIT', make:()=>({name:'BLINKIT',type:'preTaxMrp',commissionPct:33})},
+        {name:'ZEPTO', make:()=>({name:'ZEPTO',type:'preTaxMrp',commissionPct:30})},
         {name:'MEESHO', make:()=>({name:'MEESHO',commission:0,base:'MRP'})},
         {name:'PURPPLE', make:()=>({name:'PURPPLE',type:'preTaxMrp',commissionPct:28})},
         {name:'FLIPKART', make:()=>({name:'FLIPKART',commission:30,base:'SP'})},
@@ -554,6 +554,16 @@
         state.platforms[ppIdx] = {name:'PURPPLE', type:'preTaxMrp', commissionPct:28};
         migrated=true;
       }
+      // Upgrade SWIGGY, BLINKIT, and ZEPTO to the same pre-GST-MRP formula at their correct percentages.
+      const PRETAX_FIXES = { SWIGGY:25, BLINKIT:33, ZEPTO:30 };
+      Object.keys(PRETAX_FIXES).forEach(name=>{
+        const idx = state.platforms.findIndex(p=>p.name===name);
+        const pct = PRETAX_FIXES[name];
+        if(idx!==-1 && (state.platforms[idx].type!=='preTaxMrp' || state.platforms[idx].commissionPct!==pct)){
+          state.platforms[idx] = {name, type:'preTaxMrp', commissionPct:pct};
+          migrated=true;
+        }
+      });
       // De-duplicate any leftover case-insensitive duplicates (e.g. a custom "Flipkart" alongside "FLIPKART")
       const seenNames = new Set();
       const beforeLen = state.platforms.length;
