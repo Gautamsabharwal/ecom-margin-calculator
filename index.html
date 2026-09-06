@@ -130,9 +130,10 @@
     .prc-header h4{margin:0}
     .expand-toggle{font-size:11px;padding:5px 8px;white-space:nowrap}
     .calc-steps-wrap{margin-top:10px}
-    .calc-steps{border-top:1px dashed var(--border);padding-top:8px}
-    .step-row{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:3px 0}
+    .calc-steps{border-top:1px dashed var(--border);padding-top:8px;max-width:440px}
+    .step-row{display:grid;grid-template-columns:1fr auto;column-gap:20px;font-size:13px;padding:3px 0}
     .step-row>div:first-child{color:var(--muted)}
+    .step-row>div:last-child{text-align:right;white-space:nowrap}
     .step-subrow{font-size:11px;color:var(--muted);margin:-2px 0 4px 0;padding-left:4px}
     .step-total{font-weight:700;border-top:1px solid var(--border);margin-top:4px;padding-top:6px;color:var(--text)}
 
