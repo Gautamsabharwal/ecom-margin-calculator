@@ -511,27 +511,27 @@
       if(state.platforms.length===0){
         state.platforms = [
           {name:'AMAZON',type:'amazon',fixedFees:[25,45,27]},
-          {name:'NYKAA',type:'nykaa',commissionPct:40},
+          {name:'NYKAA',type:'preTaxMrp',commissionPct:40},
           {name:'SWIGGY',commission:25,base:'MRP'},
           {name:'BLINKIT',commission:33,base:'MRP'},
           {name:'ZEPTO',commission:30,base:'MRP'},
           {name:'MEESHO',commission:0,base:'MRP'},
-          {name:'PURPPLE',commission:41,base:'MRP'}
+          {name:'PURPPLE',type:'preTaxMrp',commissionPct:28}
         ];
       }
       let migrated=false;
       state.platforms.forEach(p=>{ if(p.name==='ZEPT O'){ p.name='ZEPTO'; migrated=true; } });
 
       // Canonical platform set — ensures every default platform exists (case-insensitively),
-      // normalizes casing on any user-added duplicate, and upgrades Nykaa to its real formula.
+      // normalizes casing on any user-added duplicate, and upgrades Nykaa/Purplle to their real formula.
       const CANONICAL = [
         {name:'AMAZON', make:()=>({name:'AMAZON',type:'amazon',fixedFees:[25,45,27]})},
-        {name:'NYKAA', make:()=>({name:'NYKAA',type:'nykaa',commissionPct:40})},
+        {name:'NYKAA', make:()=>({name:'NYKAA',type:'preTaxMrp',commissionPct:40})},
         {name:'SWIGGY', make:()=>({name:'SWIGGY',commission:25,base:'MRP'})},
         {name:'BLINKIT', make:()=>({name:'BLINKIT',commission:33,base:'MRP'})},
         {name:'ZEPTO', make:()=>({name:'ZEPTO',commission:30,base:'MRP'})},
         {name:'MEESHO', make:()=>({name:'MEESHO',commission:0,base:'MRP'})},
-        {name:'PURPPLE', make:()=>({name:'PURPPLE',commission:41,base:'MRP'})},
+        {name:'PURPPLE', make:()=>({name:'PURPPLE',type:'preTaxMrp',commissionPct:28})},
         {name:'FLIPKART', make:()=>({name:'FLIPKART',commission:30,base:'SP'})},
         {name:'MYNTRA', make:()=>({name:'MYNTRA',commission:30,base:'SP'})}
       ];
@@ -543,9 +543,15 @@
       // Upgrade any existing NYKAA entry to the correct commission-on-pre-GST-MRP formula,
       // preserving a manually-customized commission % if the user had changed it.
       const nyIdx = state.platforms.findIndex(p=>p.name==='NYKAA');
-      if(nyIdx!==-1 && state.platforms[nyIdx].type!=='nykaa'){
+      if(nyIdx!==-1 && state.platforms[nyIdx].type!=='preTaxMrp'){
         const old = state.platforms[nyIdx];
-        state.platforms[nyIdx] = {name:'NYKAA', type:'nykaa', commissionPct: old.commission!==undefined?old.commission:40};
+        state.platforms[nyIdx] = {name:'NYKAA', type:'preTaxMrp', commissionPct: old.commission!==undefined?old.commission:40};
+        migrated=true;
+      }
+      // Upgrade/correct any existing PURPPLE entry to the same pre-GST-MRP formula at the correct 28%.
+      const ppIdx = state.platforms.findIndex(p=>p.name==='PURPPLE');
+      if(ppIdx!==-1 && (state.platforms[ppIdx].type!=='preTaxMrp' || state.platforms[ppIdx].commissionPct!==28)){
+        state.platforms[ppIdx] = {name:'PURPPLE', type:'preTaxMrp', commissionPct:28};
         migrated=true;
       }
       // De-duplicate any leftover case-insensitive duplicates (e.g. a custom "Flipkart" alongside "FLIPKART")
@@ -589,12 +595,12 @@
         else if(sp>500) referral=sp*0.09;
         const totalFixed = platform.fixedFees.reduce((a,b)=>a+b,0);
         return {total:referral+totalFixed, breakdown:{type:'amazon',referral,fixed:platform.fixedFees[0],logistics:platform.fixedFees[1],pickpack:platform.fixedFees[2]}};
-      }else if(platform.type==='nykaa'){
-        // Nykaa charges commission on the pre-GST MRP (MRP / 1.18), not on SP or full MRP.
+      }else if(platform.type==='preTaxMrp'){
+        // Charges commission on the pre-GST MRP (MRP / 1.18), not on SP or full MRP. Used by Nykaa and Purplle.
         const preTaxMrp = mrp/1.18;
-        const pct = platform.commissionPct!==undefined ? platform.commissionPct : 40;
+        const pct = platform.commissionPct!==undefined ? platform.commissionPct : 0;
         const amount = preTaxMrp*(pct/100);
-        return {total:amount, breakdown:{type:'nykaa',preTaxMrp,pct,amount}};
+        return {total:amount, breakdown:{type:'preTaxMrp',preTaxMrp,pct,amount}};
       }else{
         const baseVal = platform.base==='SP'?sp:mrp;
         const amount = baseVal*(platform.commission/100);
@@ -608,10 +614,10 @@
       state.platforms.forEach((p,idx)=>{
         const div=document.createElement('div');
         div.style.display='flex'; div.style.justifyContent='space-between'; div.style.alignItems='center'; div.style.marginBottom='6px';
-        const desc = p.type==='amazon'?'(Tiered + Fixed)': p.type==='nykaa' ? `(${p.commissionPct}% on MRP ÷ 1.18)` : `(${p.commission}% on ${p.base})`;
+        const desc = p.type==='amazon'?'(Tiered + Fixed)': p.type==='preTaxMrp' ? `(${p.commissionPct}% on MRP ÷ 1.18)` : `(${p.commission}% on ${p.base})`;
         div.innerHTML=`<div><strong>${escapeHtml(p.name)}</strong> <span class="muted">${desc}</span></div>`;
         const row=document.createElement('div');
-        if(p.type!=='amazon' && p.type!=='nykaa'){
+        if(p.type!=='amazon' && p.type!=='preTaxMrp'){
           const edit=document.createElement('button'); edit.textContent='Edit'; edit.className='edit-btn';
           edit.onclick=()=>{ els.platformName.value=p.name; els.platformCommission.value=p.commission; els.platformBase.value=p.base; editingPlatformIdx=idx; els.addPlatformBtn.textContent='Update'; };
           row.appendChild(edit);
@@ -1012,7 +1018,7 @@
       if(r.commBreakdown && r.commBreakdown.type==='amazon'){
         commLine=`<div class="step-row"><div>Commission</div><div>₹ ${formatNumber(r.commTotal)}</div></div>
           <div class="step-subrow">Referral ₹${formatNumber(r.commBreakdown.referral)} + Fixed ₹${formatNumber(r.commBreakdown.fixed)} + Logistics ₹${formatNumber(r.commBreakdown.logistics)} + Pick&Pack ₹${formatNumber(r.commBreakdown.pickpack)}</div>`;
-      }else if(r.commBreakdown && r.commBreakdown.type==='nykaa'){
+      }else if(r.commBreakdown && r.commBreakdown.type==='preTaxMrp'){
         commLine=`<div class="step-row"><div>Commission</div><div>₹ ${formatNumber(r.commTotal)}</div></div>
           <div class="step-subrow">${r.commBreakdown.pct}% of (MRP ÷ 1.18 = ₹${formatNumber(r.commBreakdown.preTaxMrp)})</div>`;
       }else{
