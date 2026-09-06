@@ -54,9 +54,8 @@
     .add-section{margin-top:12px;padding:8px;background:var(--glass);border-radius:8px}
     .add-section button{padding:6px 10px;font-size:12px}
     .compact-btn{padding:6px 10px;font-size:12px;white-space:nowrap}
-    .logo{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:white;font-size:18px;position:relative;overflow:hidden;}
-    .logo::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.1);border-radius:10px;}
-    .logo-icon{width:24px;height:24px;color:white;z-index:1;}
+    .logo{width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .logo-icon{width:100%;height:100%;}
 
     /* OVERRIDE PANEL */
     .override-panel{margin-top:12px;padding:10px;background:var(--glass);border-radius:8px;max-height:300px;overflow:auto;}
@@ -153,18 +152,20 @@
   <div class="container" id="appRoot" style="display:none;">
     <header>
       <div class="logo">
-        <svg class="logo-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" stroke-width="1"/>
-          <rect x="4" y="4" width="2" height="2" rx="0.5" fill="none" stroke="currentColor" stroke-width="0.5"/>
-          <rect x="7" y="4" width="2" height="2" rx="0.5" fill="none" stroke="currentColor" stroke-width="0.5"/>
-          <rect x="10" y="4" width="2" height="2" rx="0.5" fill="none" stroke="currentColor" stroke-width="0.5"/>
-          <rect x="4" y="7" width="2" height="2" rx="0.5" fill="none" stroke="currentColor" stroke-width="0.5"/>
-          <rect x="7" y="7" width="2" height="2" rx="0.5" fill="none" stroke="currentColor" stroke-width="0.5"/>
-          <rect x="10" y="7" width="2" height="2" rx="0.5" fill="none" stroke="currentColor" stroke-width="0.5"/>
-          <rect x="4" y="10" width="2" height="2" rx="0.5" fill="none" stroke="currentColor" stroke-width="0.5"/>
-          <rect x="7" y="10" width="2" height="2" rx="0.5" fill="none" stroke="currentColor" stroke-width="0.5"/>
-          <rect x="10" y="10" width="2" height="2" rx="0.5" fill="none" stroke="currentColor" stroke-width="0.5"/>
-          <rect x="13" y="13" width="1" height="1" rx="0.5" fill="currentColor"/>
+        <svg class="logo-icon" width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clip-path="url(#ccLogoClip)">
+            <path d="M360 272.002V287.002C360 361.442 299.44 422.002 225 422.002C150.56 422.002 90 361.442 90 287.002C90 205.602 156.64 171.262 160.02 167.602L102.04 98.0117C98.82 101.642 0 158.672 0 287.002C0 411.372 100.65 512.002 225 512.002C349.37 512.002 450 411.352 450 287.002V272.002H360Z" fill="#FFEFB2"/>
+            <path d="M135.519 185.057L58.7891 92.971C66.0721 88.942 124.045 32 224.999 32H239.999V152H224.999C171.992 152 141.907 181.611 135.519 185.057Z" fill="#51A1FF"/>
+            <path d="M225 0V152C299.439 152 360 212.561 360 287V302H512V287C512 129.299 382.181 0 225 0Z" fill="#59C36A"/>
+            <path d="M225 122C133.3 122 60 196.79 60 287C60 377.98 134.02 452 225 452C315.98 452 390 377.98 390 287C390 196.02 315.98 122 225 122Z" fill="#FABE2C"/>
+            <path d="M225 422C299.558 422 360 361.558 360 287C360 212.442 299.558 152 225 152C150.442 152 90 212.442 90 287C90 361.558 150.442 422 225 422Z" fill="#FED843"/>
+            <path d="M261.895 237.885H241.835C245.461 242.491 247.758 248.12 248.721 254.773H265.805L261.895 268.249H248.976C247.954 278.371 243.961 285.99 236.989 291.108C230.02 296.225 220.331 298.784 207.919 298.784L249.826 347.572V348.595H230.531L185.479 295.969L185.394 285.308H206.558C213.643 285.251 219.395 283.716 223.815 280.702C228.234 277.631 231.039 273.48 232.229 268.249H183.014L186.924 254.773H232.06C229.341 243.969 221.01 238.339 207.069 237.885H183.185L187.18 224.408H265.805L261.895 237.885Z" fill="#BE861D"/>
+          </g>
+          <defs>
+            <clipPath id="ccLogoClip">
+              <rect width="512" height="512" fill="white"/>
+            </clipPath>
+          </defs>
         </svg>
       </div>
       <div>
