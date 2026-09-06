@@ -129,7 +129,18 @@
     .prc-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
     .prc-header h4{margin:0}
     .expand-toggle{font-size:11px;padding:5px 8px;white-space:nowrap}
-    .calc-steps-wrap{margin-top:10px}
+    .cm-boxes{display:flex;flex-direction:column}
+    .calc-steps-wrap{display:none;margin-top:10px}
+    .platform-result-card.expanded .calc-steps-wrap{display:block}
+    /* When exactly one platform is shown (results-grid lacks "multi") and its card is expanded,
+       move CM1/CM2 to the right so the wide empty space next to the steps gets used. */
+    .results-grid:not(.multi) .platform-result-card.expanded .prc-body{display:flex;flex-direction:row-reverse;gap:24px;align-items:flex-start}
+    .results-grid:not(.multi) .platform-result-card.expanded .cm-boxes{flex:0 0 300px}
+    .results-grid:not(.multi) .platform-result-card.expanded .calc-steps-wrap{flex:1;margin-top:0}
+    @media(max-width:720px){
+      .results-grid:not(.multi) .platform-result-card.expanded .prc-body{flex-direction:column}
+      .results-grid:not(.multi) .platform-result-card.expanded .cm-boxes{flex:0 0 auto;width:100%}
+    }
     .calc-steps{border-top:1px dashed var(--border);padding-top:8px;max-width:440px}
     .step-row{display:grid;grid-template-columns:1fr auto;column-gap:20px;font-size:13px;padding:3px 0}
     .step-row>div:first-child{color:var(--muted)}
@@ -1052,22 +1063,26 @@
         </div>`;
 
       return `
-        <div class="platform-result-card" data-plat="${escapeHtml(r.platform)}">
+        <div class="platform-result-card${expandedPlatforms.has(r.platform)?' expanded':''}" data-plat="${escapeHtml(r.platform)}">
           <div class="prc-header">
             <h4>${escapeHtml(r.platform)}</h4>
             <button type="button" class="expand-toggle secondary compact-btn" data-platform="${escapeHtml(r.platform)}">${expandedPlatforms.has(r.platform)?'Hide calculation ▴':'Show calculation ▾'}</button>
           </div>
-          <div class="cm1-box">
-            <div class="big">${(r.cm1>=0?'₹ ':'−₹ ')+formatNumber(Math.abs(r.cm1))}</div>
-            <div class="muted">CM1</div>
-            <div class="cm-pct">${r.cm1Pct}%</div>
+          <div class="prc-body">
+            <div class="cm-boxes">
+              <div class="cm1-box">
+                <div class="big">${(r.cm1>=0?'₹ ':'−₹ ')+formatNumber(Math.abs(r.cm1))}</div>
+                <div class="muted">CM1</div>
+                <div class="cm-pct">${r.cm1Pct}%</div>
+              </div>
+              <div class="cm2-box">
+                <div class="big">${(r.cm2>=0?'₹ ':'−₹ ')+formatNumber(Math.abs(r.cm2))}</div>
+                <div class="muted">CM2 (after Marketing)</div>
+                <div class="cm-pct">${r.cm2Pct}%</div>
+              </div>
+            </div>
+            <div class="calc-steps-wrap">${steps}</div>
           </div>
-          <div class="cm2-box">
-            <div class="big">${(r.cm2>=0?'₹ ':'−₹ ')+formatNumber(Math.abs(r.cm2))}</div>
-            <div class="muted">CM2 (after Marketing)</div>
-            <div class="cm-pct">${r.cm2Pct}%</div>
-          </div>
-          <div class="calc-steps-wrap" style="display:${expandedPlatforms.has(r.platform)?'block':'none'}">${steps}</div>
         </div>`;
     }
 
@@ -1077,14 +1092,13 @@
       if(!btn) return;
       const pname = btn.dataset.platform;
       const card = btn.closest('.platform-result-card');
-      const wrap = card.querySelector('.calc-steps-wrap');
       if(expandedPlatforms.has(pname)){
         expandedPlatforms.delete(pname);
-        wrap.style.display='none';
+        card.classList.remove('expanded');
         btn.textContent='Show calculation ▾';
       }else{
         expandedPlatforms.add(pname);
-        wrap.style.display='block';
+        card.classList.add('expanded');
         btn.textContent='Hide calculation ▴';
       }
     });
